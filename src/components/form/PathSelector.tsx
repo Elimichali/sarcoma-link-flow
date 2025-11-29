@@ -1,121 +1,143 @@
 import { FormPath } from "@/types/form";
-import { UserPlus, ChevronRight, Search, TrendingUp, Users, Stethoscope, CheckCircle2, ArrowDown } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Search, TrendingUp, Users, Stethoscope, CheckCircle2, ArrowRight, ChevronDown, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { SarcomaRibbon } from "@/components/SarcomaRibbon";
 
 interface PathSelectorProps {
   selectedPath: FormPath;
   onSelectPath: (path: FormPath) => void;
 }
 
-export const PathSelector = ({ selectedPath, onSelectPath }: PathSelectorProps) => {
+export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
   return (
-    <div className="form-section animate-fade-in flex flex-col justify-center min-h-[calc(100vh-200px)]">
-      {/* Header */}
-      <div className="text-center mb-6">
-        <h2 className="text-xl font-semibold text-foreground mb-2">Kdy formulář použít</h2>
-        <p className="text-sm text-muted-foreground max-w-2xl mx-auto">
-          Formulář použijte pro rychlé a odborné posouzení možného sarkomu — i při malém podezření je bezpečnější případ předat specialistům.
-        </p>
-      </div>
-
-      {/* 3 Use Cases - Side by Side */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
-        <div className="flex flex-col items-center text-center p-4 rounded-lg bg-accent/50 border border-border/50">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <Search className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-sm text-foreground">
-            <strong>Nová bulka nebo léze</strong> s podezřením na sarkom
-          </p>
-        </div>
-        
-        <div className="flex flex-col items-center text-center p-4 rounded-lg bg-accent/50 border border-border/50">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <TrendingUp className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-sm text-foreground">
-            Nález se <strong>zvětšuje nebo mění</strong> a budí obavy
-          </p>
-        </div>
-        
-        <div className="flex flex-col items-center text-center p-4 rounded-lg bg-accent/50 border border-border/50">
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center mb-2">
-            <Users className="w-5 h-5 text-primary" />
-          </div>
-          <p className="text-sm text-foreground">
-            Potřebujete <strong>konzultaci</strong> nebo <strong>druhý názor</strong>
-          </p>
-        </div>
-      </div>
-
-      {/* Requirements Note */}
-      <div className="p-3 rounded-lg bg-muted/50 border border-border mb-5 max-w-2xl mx-auto">
-        <div className="flex items-center gap-2 justify-center">
-          <Stethoscope className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-          <p className="text-xs text-muted-foreground">
-            Potřeba: <strong className="text-foreground">základní anamnéza</strong> + <strong className="text-foreground">zobrazovací vyšetření</strong> (min. sono, ideálně MRI/CT)
-          </p>
-        </div>
-      </div>
-
-      {/* 3 Benefits with Checkmarks - Side by Side */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-6">
-        <div className="flex flex-col items-center text-center p-3 rounded-lg border border-success/30 bg-success/5">
-          <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center mb-2">
-            <CheckCircle2 className="w-4 h-4 text-success" />
-          </div>
-          <p className="text-xs text-foreground">Formulář Vás provede všemi kroky</p>
-        </div>
-        
-        <div className="flex flex-col items-center text-center p-3 rounded-lg border border-success/30 bg-success/5">
-          <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center mb-2">
-            <CheckCircle2 className="w-4 h-4 text-success" />
-          </div>
-          <p className="text-xs text-foreground">Raději odeslat dříve než pozdě</p>
-        </div>
-        
-        <div className="flex flex-col items-center text-center p-3 rounded-lg border border-success/30 bg-success/5">
-          <div className="w-8 h-8 rounded-full bg-success/20 flex items-center justify-center mb-2">
-            <CheckCircle2 className="w-4 h-4 text-success" />
-          </div>
-          <p className="text-xs text-foreground">Tým zajistí triáž a další postup</p>
-        </div>
-      </div>
-
-      {/* Arrow */}
-      <div className="flex justify-center mb-4">
-        <ArrowDown className="w-5 h-5 text-primary animate-bounce" />
-      </div>
-
-      {/* Form Start Button */}
-      <div className="max-w-sm mx-auto w-full">
-        <button
-          type="button"
-          onClick={() => onSelectPath('A')}
-          className={cn(
-            "relative w-full p-4 rounded-xl border-2 text-left transition-all duration-200 group",
-            selectedPath === 'A'
-              ? "border-primary bg-primary/5 shadow-sm"
-              : "border-border hover:border-primary/50 hover:bg-accent/50"
-          )}
-        >
-          <div className="flex items-center gap-3">
-            <div className={cn(
-              "w-10 h-10 rounded-lg flex items-center justify-center transition-colors",
-              selectedPath === 'A' ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary"
-            )}>
-              <UserPlus className="w-5 h-5" />
+    <div className="animate-fade-in flex flex-col min-h-[calc(100vh-180px)]">
+      {/* Hero Section - Above the Fold */}
+      <section className="relative py-8 px-4 -mx-4 bg-gradient-to-br from-accent via-background to-accent/50 border-b border-border">
+        <div className="max-w-3xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            {/* Left: Title & Description */}
+            <div className="flex-1 text-center md:text-left">
+              <div className="flex items-center gap-3 justify-center md:justify-start mb-3">
+                <SarcomaRibbon size="sm" />
+                <span className="text-xs font-medium text-sarcoma-dark bg-sarcoma/20 px-2.5 py-1 rounded-full">
+                  Sarkom Awareness
+                </span>
+              </div>
+              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                Nový pacient s podezřením na sarkom
+              </h2>
+              <p className="text-muted-foreground text-sm md:text-base">
+                Předejte případ specializovanému týmu — rychle, bezpečně a jednoduše.
+              </p>
             </div>
-            <div>
-              <h3 className="font-semibold text-foreground text-base">Vyplnit formulář</h3>
-              <p className="text-xs text-muted-foreground">Nový pacient s podezřením na sarkom</p>
+            
+            {/* Right: CTA */}
+            <div className="flex flex-col items-center gap-3">
+              <Button
+                onClick={() => onSelectPath('A')}
+                size="lg"
+                className="bg-primary hover:bg-sarcoma-dark text-primary-foreground font-semibold px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
+              >
+                Vyplnit formulář
+                <ArrowRight className="w-5 h-5 ml-2" />
+              </Button>
+              <span className="text-xs text-muted-foreground">Odeslání trvá ~5 minut</span>
             </div>
           </div>
-          <ChevronRight className={cn(
-            "absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 transition-all",
-            selectedPath === 'A' ? "text-primary opacity-100" : "text-muted-foreground opacity-0 group-hover:opacity-100"
-          )} />
-        </button>
+        </div>
+      </section>
+
+      {/* Scroll Indicator */}
+      <div className="flex justify-center py-3">
+        <ChevronDown className="w-5 h-5 text-muted-foreground animate-bounce" />
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 py-4">
+        {/* When to Use - 3 Horizontal Cards */}
+        <section className="mb-6">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-center mb-4">
+            Kdy formulář použít
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <Search className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-foreground">
+                <strong>Nová bulka nebo léze</strong> vzbuzující podezření
+              </p>
+            </div>
+            
+            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <TrendingUp className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-foreground">
+                Nález se <strong>zvětšuje nebo mění</strong>
+              </p>
+            </div>
+            
+            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
+              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
+              <p className="text-sm text-foreground">
+                Potřebujete <strong>konzultaci</strong> nebo <strong>druhý názor</strong>
+              </p>
+            </div>
+          </div>
+        </section>
+
+        {/* Requirements Note */}
+        <section className="mb-6">
+          <div className="flex items-center gap-3 justify-center p-4 rounded-xl bg-muted/50 border border-border max-w-2xl mx-auto">
+            <Stethoscope className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+            <p className="text-sm text-muted-foreground">
+              <strong className="text-foreground">Minimální potřeba:</strong> základní anamnéza + zobrazovací vyšetření (sono, ideálně MRI/CT)
+            </p>
+          </div>
+        </section>
+
+        {/* Benefits - 3 Check Cards */}
+        <section className="mb-6">
+          <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider text-center mb-4">
+            Co můžete očekávat
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="flex flex-col items-center text-center p-4 rounded-xl border border-success/30 bg-success/5">
+              <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center mb-2">
+                <CheckCircle2 className="w-5 h-5 text-success" />
+              </div>
+              <p className="text-sm text-foreground">Formulář vás provede všemi kroky</p>
+            </div>
+            
+            <div className="flex flex-col items-center text-center p-4 rounded-xl border border-success/30 bg-success/5">
+              <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center mb-2">
+                <CheckCircle2 className="w-5 h-5 text-success" />
+              </div>
+              <p className="text-sm text-foreground">Doporučujeme odeslat co nejdříve</p>
+            </div>
+            
+            <div className="flex flex-col items-center text-center p-4 rounded-xl border border-success/30 bg-success/5">
+              <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center mb-2">
+                <CheckCircle2 className="w-5 h-5 text-success" />
+              </div>
+              <p className="text-sm text-foreground">Tým zajistí triáž a další postup</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Secondary CTA */}
+        <div className="flex justify-center">
+          <a 
+            href="mailto:koordinator@sarkom.cz" 
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Mail className="w-4 h-4" />
+            Kontaktovat koordinátora
+          </a>
+        </div>
       </div>
     </div>
   );

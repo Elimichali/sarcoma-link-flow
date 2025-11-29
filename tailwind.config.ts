@@ -58,6 +58,11 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        sarcoma: {
+          DEFAULT: "hsl(var(--sarcoma))",
+          foreground: "hsl(var(--sarcoma-foreground))",
+          dark: "hsl(var(--sarcoma-dark))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
