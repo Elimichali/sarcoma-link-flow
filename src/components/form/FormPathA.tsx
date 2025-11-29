@@ -229,7 +229,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
             required
             multiline
             rows={4}
-            placeholder="Uveďte relevantní anamnézu pacienta..."
+            placeholder="Uveďte relevantní anamnézu pacienta (můžete vložit zkopírovaný text)..."
             error={errors.anamnesis}
           />
           <div className="space-y-4">
