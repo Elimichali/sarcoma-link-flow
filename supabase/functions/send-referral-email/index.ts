@@ -257,7 +257,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Sarkom Referral <onboarding@resend.dev>",
-      to: ["eliskamichalicova@gmail.com", "julovec@deloittece.com"],
+      to: ["eliskamichalicova@gmail.com"],
       subject: `${data.patientContact.firstName} ${data.patientContact.lastName} - léčba`,
       html: htmlContent,
       attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
