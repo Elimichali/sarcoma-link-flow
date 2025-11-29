@@ -92,7 +92,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     const emailResponse = await resend.emails.send({
       from: "Sarkom Referral <onboarding@resend.dev>",
-      to: ["julovec@deloittece.com"],
+      to: ["eliskamichalicova@gmail.com"],
       subject: `Nový referenční formulář - ${formTypeName} - ${data.patientContact.firstName} ${data.patientContact.lastName}`,
       html: htmlContent,
     });
