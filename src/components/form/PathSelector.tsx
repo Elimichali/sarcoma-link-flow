@@ -1,5 +1,5 @@
 import { FormPath } from "@/types/form";
-import { Search, TrendingUp, Users, Stethoscope, CheckCircle2, ArrowRight, ChevronDown, Mail } from "lucide-react";
+import { Search, TrendingUp, Users, Stethoscope, CheckCircle2, ArrowRight, ChevronDown, Mail, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SarcomaRibbon } from "@/components/SarcomaRibbon";
 
@@ -13,6 +13,12 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
     <div className="animate-fade-in flex flex-col min-h-[calc(100vh-180px)]">
       {/* Hero Section - Above the Fold */}
       <section className="relative py-8 px-4 -mx-4 bg-gradient-to-br from-sarcoma/30 via-sarcoma/10 to-accent border-b border-sarcoma/30">
+        {/* Login Button - Top Right */}
+        <button className="absolute top-4 right-4 flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <LogIn className="w-4 h-4" />
+          <span className="hidden sm:inline">Přihlášení</span>
+        </button>
+        
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
             {/* Left: Title & Description */}
