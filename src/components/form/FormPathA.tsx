@@ -185,8 +185,8 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
     onBack();
   };
 
-  // Show no imaging alert
-  if (currentStep === 3 && formData.hasImagingExam === false) {
+  // Show no imaging alert immediately after step 1 if answer is NO
+  if (currentStep > 1 && formData.hasImagingExam === false) {
     return <NoImagingAlert onBack={onBack} />;
   }
 
