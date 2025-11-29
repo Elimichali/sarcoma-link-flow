@@ -162,7 +162,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Sarkom Referral <onboarding@resend.dev>",
       to: ["eliskamichalicova@gmail.com"],
-      subject: `Žádost o konzultaci – podezření na sarkom (${data.patientContact.firstName} ${data.patientContact.lastName})`,
+      subject: `${data.patientContact.firstName} ${data.patientContact.lastName} - léčba`,
       html: htmlContent,
     });
 

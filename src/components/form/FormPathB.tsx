@@ -78,12 +78,14 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
       });
     }
 
-    if (step === 6) {
-      // Destination is required
+    // Step 5: Přílohy
+    if (step === 5) {
       if (!formData.destination) {
         newErrors.destination = "Vyberte místo odeslání";
       }
+    }
 
+    if (step === 6) {
       // Doctor contact validation
       const doctorFields: (keyof DoctorContact)[] = ["firstName", "lastName", "email", "phone"];
       doctorFields.forEach((field) => {
@@ -296,8 +298,16 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
 
       {/* Step 5: Attachments */}
       {currentStep === 5 && (
-        <div className="form-section animate-slide-down">
+        <div className="form-section animate-slide-down space-y-6">
           <h2 className="form-section-title">Přílohy</h2>
+          
+          {/* Destination selector - first */}
+          <DestinationSelector
+            value={formData.destination}
+            onChange={(value) => updateField("destination", value)}
+            error={errors.destination}
+          />
+          
           <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
           <EPacsCheckbox
             checked={formData.epacsShared}
@@ -318,13 +328,6 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
                 .filter(([k]) => k.startsWith("doctor_"))
                 .map(([k, v]) => [k.replace("doctor_", ""), v])
             )}
-          />
-
-          {/* Destination selector */}
-          <DestinationSelector
-            value={formData.destination}
-            onChange={(value) => updateField("destination", value)}
-            error={errors.destination}
           />
 
           {/* Patient contact */}
