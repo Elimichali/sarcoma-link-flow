@@ -9,6 +9,18 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+// HTML escaping function to prevent XSS attacks
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char] || char);
+}
+
 interface DoctorContact {
   firstName: string;
   lastName: string;
@@ -105,7 +117,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Blood thinners HTML - styled to match review page
     const bloodThinnersHtml = hasBloodThinners
       ? `<div style="margin-top: 12px; background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 12px;">
-          <span style="font-size: 12px; color: #dc2626; font-weight: 600;">⚠️ Antikoagulancia: Ano${bloodThinnersDetails ? ` (${bloodThinnersDetails})` : ''}</span>
+          <span style="font-size: 12px; color: #dc2626; font-weight: 600;">⚠️ Antikoagulancia: Ano${bloodThinnersDetails ? ` (${escapeHtml(bloodThinnersDetails)})` : ''}</span>
         </div>`
       : `<div style="margin-top: 8px; font-size: 12px; color: #6b7280;">
           <span style="font-weight: 500;">Antikoagulancia:</span> Ne
@@ -114,12 +126,12 @@ const handler = async (req: Request): Promise<Response> => {
     // Build imaging list HTML
     let imagingListHtml = '';
     imagingExams.forEach((exam: ImagingExam) => {
-      const label = IMAGING_LABELS[exam.type] || exam.type;
+      const label = IMAGING_LABELS[exam.type] || escapeHtml(exam.type);
       imagingListHtml += `
         <div style="margin-bottom: 8px;">
           <span style="font-weight: 600; color: #1a1a1a;">${label}</span>
-          <span style="color: #6b7280;"> — ${exam.date || 'bez data'}</span>
-          ${exam.description ? `<p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">${exam.description}</p>` : ''}
+          <span style="color: #6b7280;"> — ${escapeHtml(exam.date || 'bez data')}</span>
+          ${exam.description ? `<p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">${escapeHtml(exam.description)}</p>` : ''}
         </div>
       `;
     });
@@ -128,8 +140,8 @@ const handler = async (req: Request): Promise<Response> => {
     const histologyHtml = hasHistology ? `
       <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
         <span style="font-size: 12px; font-weight: 600; color: #1a1a1a;">Histologie:</span>
-        <span style="font-size: 12px; color: #6b7280;"> ${histologyDate || 'bez data'}</span>
-        ${histologyResult ? `<p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">${histologyResult}</p>` : ''}
+        <span style="font-size: 12px; color: #6b7280;"> ${escapeHtml(histologyDate || 'bez data')}</span>
+        ${histologyResult ? `<p style="font-size: 12px; color: #6b7280; margin: 4px 0 0 0;">${escapeHtml(histologyResult)}</p>` : ''}
       </div>
     ` : '';
 
@@ -149,7 +161,7 @@ const handler = async (req: Request): Promise<Response> => {
               <span style="background-color: rgba(234, 179, 8, 0.2); color: #92400e; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 20px;">Sarkom Referral</span>
             </div>
             <h1 style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">
-              ${data.patientContact.firstName} ${data.patientContact.lastName}
+              ${escapeHtml(data.patientContact.firstName)} ${escapeHtml(data.patientContact.lastName)}
             </h1>
             <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 14px;">Nový pacient s podezřením na sarkom</p>
           </div>
@@ -157,13 +169,13 @@ const handler = async (req: Request): Promise<Response> => {
           <!-- Důvod podezření -->
           <div style="background-color: rgba(0, 0, 0, 0.03); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
             <h4 style="margin: 0 0 8px 0; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Důvod podezření</h4>
-            <p style="margin: 0; font-size: 14px; color: #1a1a1a; line-height: 1.5;">${formData.suspicionReason || '—'}</p>
+            <p style="margin: 0; font-size: 14px; color: #1a1a1a; line-height: 1.5;">${escapeHtml(formData.suspicionReason as string || '—')}</p>
           </div>
 
           <!-- Anamnéza -->
           <div style="background-color: rgba(0, 0, 0, 0.03); border-radius: 8px; padding: 16px; margin-bottom: 16px;">
             <h4 style="margin: 0 0 8px 0; font-size: 11px; font-weight: 600; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px;">Anamnéza</h4>
-            <p style="margin: 0; font-size: 14px; color: #1a1a1a; line-height: 1.5;">${formData.anamnesis || '—'}</p>
+            <p style="margin: 0; font-size: 14px; color: #1a1a1a; line-height: 1.5;">${escapeHtml(formData.anamnesis as string || '—')}</p>
             ${bloodThinnersHtml}
           </div>
 
@@ -192,15 +204,15 @@ const handler = async (req: Request): Promise<Response> => {
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
               <tr>
                 <td style="padding: 4px 0; color: #6b7280; width: 100px;">Jméno:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.doctorContact.firstName} ${data.doctorContact.lastName}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.doctorContact.firstName)} ${escapeHtml(data.doctorContact.lastName)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Email:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.doctorContact.email}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.doctorContact.email)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Telefon:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.doctorContact.phone}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.doctorContact.phone)}</td>
               </tr>
             </table>
           </div>
@@ -211,27 +223,27 @@ const handler = async (req: Request): Promise<Response> => {
             <table style="width: 100%; font-size: 14px; border-collapse: collapse;">
               <tr>
                 <td style="padding: 4px 0; color: #6b7280; width: 100px;">Jméno:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.patientContact.firstName} ${data.patientContact.lastName}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.patientContact.firstName)} ${escapeHtml(data.patientContact.lastName)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Rodné číslo:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.patientContact.birthNumber}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.patientContact.birthNumber)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Pojišťovna:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${insuranceLabel}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(insuranceLabel)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Adresa:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.patientContact.address}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.patientContact.address)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Telefon:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.patientContact.phone}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.patientContact.phone)}</td>
               </tr>
               <tr>
                 <td style="padding: 4px 0; color: #6b7280;">Email:</td>
-                <td style="padding: 4px 0; color: #1a1a1a;">${data.patientContact.email || 'neuvedeno'}</td>
+                <td style="padding: 4px 0; color: #1a1a1a;">${escapeHtml(data.patientContact.email || 'neuvedeno')}</td>
               </tr>
             </table>
           </div>
@@ -258,7 +270,7 @@ const handler = async (req: Request): Promise<Response> => {
     const emailResponse = await resend.emails.send({
       from: "Sarkom Referral <onboarding@resend.dev>",
       to: ["eliskamichalicova@gmail.com"],
-      subject: `${data.patientContact.firstName} ${data.patientContact.lastName} - léčba`,
+      subject: `${escapeHtml(data.patientContact.firstName)} ${escapeHtml(data.patientContact.lastName)} - léčba`,
       html: htmlContent,
       attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
     });
