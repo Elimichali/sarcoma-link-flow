@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FormDataPathB, initialFormDataPathB, PatientContact } from "@/types/form";
+import { FormDataPathB, initialFormDataPathB, PatientContact, DestinationType } from "@/types/form";
 import { ProgressIndicator } from "./ProgressIndicator";
 import {
   TextField,
@@ -10,12 +10,13 @@ import {
   FileUpload,
   PatientContactFields,
   EPacsNotice,
+  EPacsCheckbox,
 } from "./FormFields";
+import { SuccessDialog } from "./SuccessDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Send, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { toast } from "sonner";
 
 interface FormPathBProps {
   onBack: () => void;
@@ -27,6 +28,7 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
   const [formData, setFormData] = useState<FormDataPathB>(initialFormDataPathB);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const updateField = <K extends keyof FormDataPathB>(field: K, value: FormDataPathB[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -71,6 +73,11 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
     }
 
     if (step === 6) {
+      // Destination is required
+      if (!formData.patientContact.destination) {
+        newErrors.contact_destination = "Vyberte místo odeslání";
+      }
+
       const contactFields: (keyof PatientContact)[] = [
         "firstName",
         "lastName",
@@ -108,10 +115,16 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
   const handleSubmit = () => {
     if (validateStep(6)) {
       console.log("Form submitted:", formData);
-      toast.success("Formulář byl úspěšně odeslán", {
-        description: "Koordinátor onkologické péče bude informován.",
-      });
+      setShowSuccessDialog(true);
     }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setShowSuccessDialog(false);
+    // Reset form and go back to path selection
+    setFormData(initialFormDataPathB);
+    setCurrentStep(1);
+    onBack();
   };
 
   // Show no imaging alert
@@ -239,6 +252,10 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
         <div className="form-section animate-slide-down">
           <h2 className="form-section-title">Přílohy</h2>
           <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
+          <EPacsCheckbox
+            checked={formData.epacsShared}
+            onChange={(checked) => updateField("epacsShared", checked)}
+          />
         </div>
       )}
 
@@ -285,6 +302,13 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
           </Button>
         )}
       </div>
+
+      {/* Success Dialog */}
+      <SuccessDialog
+        open={showSuccessDialog}
+        onClose={handleCloseSuccessDialog}
+        destination={formData.patientContact.destination as DestinationType}
+      />
     </div>
   );
 };
