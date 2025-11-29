@@ -66,6 +66,279 @@ interface ReferralEmailRequest {
   attachments?: AttachmentData[];
 }
 
+// FHIR Bundle builder function
+function buildFhirBundle(data: ReferralEmailRequest): any {
+  const timestamp = new Date().toISOString();
+  const formId = `FORM-${Date.now()}`;
+  const patientId = `patient-${formId}`;
+  
+  // Extract form data
+  const formData = data.formData;
+  const suspicionReason = formData.suspicionReason as string || '';
+  const anamnesis = formData.anamnesis as string || '';
+  const imagingExams = (formData.imagingExams as ImagingExam[]) || [];
+  const hasHistology = formData.hasHistology as boolean;
+  const histologyDate = formData.histologyDate as string || '';
+  const histologyResult = formData.histologyResult as string || '';
+  const hasBloodThinners = formData.hasBloodThinners as boolean;
+  const bloodThinnersDetails = formData.bloodThinnersDetails as string || '';
+  
+  // Build clinical summary for Observation
+  let clinicalSummary = `Důvod podezření: ${suspicionReason}\n\n`;
+  clinicalSummary += `Anamnéza: ${anamnesis}\n\n`;
+  
+  if (hasBloodThinners) {
+    clinicalSummary += `Antikoagulancia: Ano${bloodThinnersDetails ? ` (${bloodThinnersDetails})` : ''}\n\n`;
+  }
+  
+  if (imagingExams.length > 0) {
+    clinicalSummary += 'Zobrazovací vyšetření:\n';
+    imagingExams.forEach((exam: ImagingExam) => {
+      const label = IMAGING_LABELS[exam.type] || exam.type;
+      clinicalSummary += `- ${label} (${exam.date || 'bez data'}): ${exam.description}\n`;
+    });
+    clinicalSummary += '\n';
+  }
+  
+  if (hasHistology) {
+    clinicalSummary += `Histologie (${histologyDate || 'bez data'}): ${histologyResult}\n`;
+  }
+  
+  // Destination mapping
+  const destinationName = DESTINATION_NAMES[data.destination] || data.destination;
+  
+  // Build FHIR Bundle
+  return {
+    resourceType: 'Bundle',
+    type: 'collection',
+    id: formId,
+    timestamp: timestamp,
+    entry: [
+      // Patient resource
+      {
+        fullUrl: `urn:uuid:${patientId}`,
+        resource: {
+          resourceType: 'Patient',
+          id: patientId,
+          identifier: [
+            {
+              system: 'https://sarkom-fasttrack.lovable.app/patient-id',
+              value: formId,
+              use: 'temp'
+            },
+            {
+              system: 'https://czech-healthcare/birth-number',
+              value: data.patientContact.birthNumber,
+              use: 'official'
+            }
+          ],
+          name: [
+            {
+              use: 'official',
+              family: data.patientContact.lastName,
+              given: [data.patientContact.firstName],
+              text: `${data.patientContact.firstName} ${data.patientContact.lastName}`
+            }
+          ],
+          address: [
+            {
+              use: 'home',
+              text: data.patientContact.address
+            }
+          ],
+          telecom: [
+            {
+              system: 'phone',
+              value: data.patientContact.phone,
+              use: 'mobile'
+            },
+            {
+              system: 'email',
+              value: data.patientContact.email,
+              use: 'home'
+            }
+          ],
+          meta: {
+            tag: [
+              {
+                system: 'http://terminology.hl7.org/CodeSystem/v3-Confidentiality',
+                code: 'R',
+                display: 'restricted'
+              }
+            ]
+          }
+        }
+      },
+      // Observation resource - Clinical findings
+      {
+        fullUrl: `urn:uuid:obs-${formId}`,
+        resource: {
+          resourceType: 'Observation',
+          id: `obs-${formId}`,
+          status: 'final',
+          category: [
+            {
+              coding: [
+                {
+                  system: 'http://terminology.hl7.org/CodeSystem/observation-category',
+                  code: 'exam',
+                  display: 'Exam'
+                }
+              ]
+            }
+          ],
+          code: {
+            coding: [
+              {
+                system: 'http://loinc.org',
+                code: '51848-0',
+                display: 'Assessment note'
+              }
+            ],
+            text: 'Clinical findings - soft tissue mass characteristics'
+          },
+          subject: {
+            reference: `urn:uuid:${patientId}`
+          },
+          effectiveDateTime: timestamp,
+          issued: timestamp,
+          valueString: clinicalSummary.trim(),
+          note: [
+            {
+              text: 'Comprehensive clinical assessment for suspected sarcoma'
+            }
+          ]
+        }
+      },
+      // Condition resource - Suspected sarcoma
+      {
+        fullUrl: `urn:uuid:cond-${formId}`,
+        resource: {
+          resourceType: 'Condition',
+          id: `cond-${formId}`,
+          clinicalStatus: {
+            coding: [
+              {
+                system: 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+                code: 'active',
+                display: 'Active'
+              }
+            ]
+          },
+          verificationStatus: {
+            coding: [
+              {
+                system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+                code: 'provisional',
+                display: 'Provisional'
+              }
+            ]
+          },
+          category: [
+            {
+              coding: [
+                {
+                  system: 'http://terminology.hl7.org/CodeSystem/condition-category',
+                  code: 'encounter-diagnosis',
+                  display: 'Encounter Diagnosis'
+                }
+              ]
+            }
+          ],
+          severity: {
+            coding: [
+              {
+                system: 'http://snomed.info/sct',
+                code: '24484000',
+                display: 'Severe'
+              }
+            ]
+          },
+          code: {
+            coding: [
+              {
+                system: 'http://snomed.info/sct',
+                code: '424413001',
+                display: 'Soft tissue sarcoma'
+              }
+            ],
+            text: 'Suspected soft tissue sarcoma'
+          },
+          subject: {
+            reference: `urn:uuid:${patientId}`
+          },
+          recordedDate: timestamp,
+          note: [
+            {
+              text: suspicionReason
+            }
+          ]
+        }
+      },
+      // ServiceRequest resource - Referral
+      {
+        fullUrl: `urn:uuid:ref-${formId}`,
+        resource: {
+          resourceType: 'ServiceRequest',
+          id: `ref-${formId}`,
+          status: 'active',
+          intent: 'order',
+          priority: 'urgent',
+          category: [
+            {
+              coding: [
+                {
+                  system: 'http://snomed.info/sct',
+                  code: '3457005',
+                  display: 'Patient referral'
+                }
+              ]
+            }
+          ],
+          code: {
+            coding: [
+              {
+                system: 'http://snomed.info/sct',
+                code: '306206005',
+                display: 'Referral to oncology service'
+              }
+            ],
+            text: `Referral to sarcoma center - ${destinationName}`
+          },
+          subject: {
+            reference: `urn:uuid:${patientId}`
+          },
+          authoredOn: timestamp,
+          requester: {
+            type: 'Practitioner',
+            display: `Dr. ${data.doctorContact.firstName} ${data.doctorContact.lastName}`,
+            identifier: {
+              system: 'email',
+              value: data.doctorContact.email
+            }
+          },
+          performer: [
+            {
+              display: destinationName
+            }
+          ],
+          reasonReference: [
+            {
+              reference: `urn:uuid:cond-${formId}`,
+              display: 'Suspected soft tissue sarcoma'
+            }
+          ],
+          note: [
+            {
+              text: `Referring physician: Dr. ${data.doctorContact.firstName} ${data.doctorContact.lastName}\nContact: ${data.doctorContact.phone}, ${data.doctorContact.email}\nePACS shared: ${data.epacsShared ? 'Yes' : 'No'}`
+            }
+          ]
+        }
+      }
+    ]
+  };
+}
+
 const DESTINATION_NAMES: Record<string, string> = {
   praha: 'Fakultní nemocnice Motol',
   brno: 'Masarykův onkologický ústav',
@@ -336,6 +609,23 @@ const handler = async (req: Request): Promise<Response> => {
       filename: attachment.filename,
       content: attachment.content, // base64 string
     })) || [];
+
+    // Generate FHIR Bundle and add as attachment
+    try {
+      const fhirBundle = buildFhirBundle(data);
+      const fhirJson = JSON.stringify(fhirBundle, null, 2);
+      const fhirBase64 = btoa(fhirJson); // Convert to base64
+      
+      emailAttachments.push({
+        filename: `sarkom-fasttrack-referral-fhir-${Date.now()}.json`,
+        content: fhirBase64,
+      });
+      
+      console.log('FHIR Bundle generated successfully and added as attachment');
+    } catch (fhirError) {
+      console.error('Error generating FHIR Bundle (continuing with email):', fhirError);
+      // Continue with email even if FHIR generation fails
+    }
 
     console.log(`Sending email with ${emailAttachments.length} attachment(s)`);
 
