@@ -26,6 +26,12 @@ interface PatientContact {
   email: string;
 }
 
+interface AttachmentData {
+  filename: string;
+  content: string; // base64 encoded
+  contentType: string;
+}
+
 interface ReferralEmailRequest {
   formType: 'A' | 'B';
   destination: 'praha' | 'brno';
@@ -33,6 +39,7 @@ interface ReferralEmailRequest {
   patientContact: PatientContact;
   formData: Record<string, unknown>;
   epacsShared: boolean;
+  attachments?: AttachmentData[];
 }
 
 const DESTINATION_NAMES: Record<string, string> = {
@@ -240,11 +247,20 @@ const handler = async (req: Request): Promise<Response> => {
       </html>
     `;
 
+    // Prepare attachments for Resend
+    const emailAttachments = data.attachments?.map((attachment) => ({
+      filename: attachment.filename,
+      content: attachment.content, // base64 string
+    })) || [];
+
+    console.log(`Sending email with ${emailAttachments.length} attachment(s)`);
+
     const emailResponse = await resend.emails.send({
       from: "Sarkom Referral <onboarding@resend.dev>",
       to: ["eliskamichalicova@gmail.com"],
       subject: `${data.patientContact.firstName} ${data.patientContact.lastName} - léčba`,
       html: htmlContent,
+      attachments: emailAttachments.length > 0 ? emailAttachments : undefined,
     });
 
     console.log("Email sent successfully:", emailResponse);

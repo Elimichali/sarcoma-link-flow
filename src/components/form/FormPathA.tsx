@@ -140,6 +140,21 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
+  // Convert File to base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = () => {
+        const result = reader.result as string;
+        // Remove data:*/*;base64, prefix
+        const base64 = result.split(',')[1];
+        resolve(base64);
+      };
+      reader.onerror = (error) => reject(error);
+    });
+  };
+
   const handleSubmit = async () => {
     if (!confirmData) {
       toast.error("Potvrďte prosím, že všechny zadané údaje jsou úplné.");
@@ -148,6 +163,15 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
     setIsSubmitting(true);
     try {
+      // Convert attachments to base64
+      const attachmentsData = await Promise.all(
+        formData.attachments.map(async (file) => ({
+          filename: file.name,
+          content: await fileToBase64(file),
+          contentType: file.type,
+        }))
+      );
+
       const { data, error } = await supabase.functions.invoke('send-referral-email', {
         body: {
           formType: 'A',
@@ -155,6 +179,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           doctorContact: formData.doctorContact,
           patientContact: formData.patientContact,
           epacsShared: formData.epacsShared,
+          attachments: attachmentsData,
           formData: {
             suspicionReason: formData.suspicionReason,
             imagingExams: formData.imagingExams,
