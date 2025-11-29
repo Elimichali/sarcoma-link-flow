@@ -223,11 +223,27 @@ interface FileUploadProps {
 
 export const FileUpload = ({ files, onChange }: FileUploadProps) => {
   const inputRef = useRef<HTMLInputElement>(null);
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files);
-      onChange([...files, ...newFiles]);
+      
+      // Validate file sizes
+      const oversizedFiles = newFiles.filter(file => file.size > MAX_FILE_SIZE);
+      
+      if (oversizedFiles.length > 0) {
+        const fileNames = oversizedFiles.map(f => f.name).join(', ');
+        alert(`Následující soubory překračují limit 10 MB a nebyly nahrány: ${fileNames}`);
+        
+        // Only add files that are within the size limit
+        const validFiles = newFiles.filter(file => file.size <= MAX_FILE_SIZE);
+        if (validFiles.length > 0) {
+          onChange([...files, ...validFiles]);
+        }
+      } else {
+        onChange([...files, ...newFiles]);
+      }
     }
   };
 
