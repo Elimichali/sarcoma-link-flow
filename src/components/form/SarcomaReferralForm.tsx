@@ -3,7 +3,6 @@ import { FormPath } from "@/types/form";
 import { FormHeader } from "./FormHeader";
 import { PathSelector } from "./PathSelector";
 import { FormPathA } from "./FormPathA";
-import { FormPathB } from "./FormPathB";
 
 export const SarcomaReferralForm = () => {
   const [selectedPath, setSelectedPath] = useState<FormPath>(null);
@@ -25,7 +24,6 @@ export const SarcomaReferralForm = () => {
         )}
 
         {selectedPath === 'A' && <FormPathA onBack={handleBack} />}
-        {selectedPath === 'B' && <FormPathB onBack={handleBack} />}
       </main>
 
       <footer className="border-t border-border bg-card py-6 mt-auto">
