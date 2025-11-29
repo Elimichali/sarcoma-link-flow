@@ -25,7 +25,7 @@ interface FormPathBProps {
   onBack: () => void;
 }
 
-const STEP_LABELS = ["Důvod", "Zobrazení", "Diagnóza", "Vyšetření", "Přílohy", "Kontakt"];
+const STEP_LABELS = ["Důvod", "Diagnóza", "Nález", "Vyšetření", "Přílohy", "Kontakt"];
 
 export const FormPathB = ({ onBack }: FormPathBProps) => {
   const [formData, setFormData] = useState<FormDataPathB>(initialFormDataPathB);
@@ -52,7 +52,18 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
       newErrors.consultationReason = "Toto pole je povinné";
     }
 
+    // Step 2: Diagnóza (anamnesis + diagnosis)
     if (step === 2) {
+      if (!formData.anamnesis.trim()) {
+        newErrors.anamnesis = "Toto pole je povinné";
+      }
+      if (!formData.diagnosis.trim()) {
+        newErrors.diagnosis = "Toto pole je povinné";
+      }
+    }
+
+    // Step 3: Nález (imaging)
+    if (step === 3) {
       if (formData.selectedImagingTypes.length === 0) {
         newErrors.imagingTypes = "Vyberte minimálně 1 zobrazovací vyšetření";
       }
@@ -65,15 +76,6 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
           newErrors[`${type}_description`] = "Popis je povinný";
         }
       });
-    }
-
-    if (step === 3) {
-      if (!formData.anamnesis.trim()) {
-        newErrors.anamnesis = "Toto pole je povinné";
-      }
-      if (!formData.diagnosis.trim()) {
-        newErrors.diagnosis = "Toto pole je povinné";
-      }
     }
 
     if (step === 6) {
@@ -173,7 +175,7 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
   };
 
   // Show no imaging alert
-  if (currentStep === 2 && formData.hasImagingExam === false) {
+  if (currentStep === 3 && formData.hasImagingExam === false) {
     return <NoImagingAlert onBack={onBack} />;
   }
 
@@ -206,29 +208,8 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
         </div>
       )}
 
-      {/* Step 2: Imaging exams */}
-      {currentStep === 2 && formData.hasImagingExam && (
-        <div className="form-section animate-slide-down">
-          <h2 className="form-section-title">Zobrazovací vyšetření</h2>
-          <ImagingCheckboxes
-            selectedTypes={formData.selectedImagingTypes}
-            onChange={(types) => updateField("selectedImagingTypes", types)}
-            error={errors.imagingTypes}
-          />
-          {formData.selectedImagingTypes.length > 0 && (
-            <div className="mt-6">
-              <ImagingExamFields
-                exams={formData.imagingExams}
-                selectedTypes={formData.selectedImagingTypes}
-                onChange={(exams) => updateField("imagingExams", exams)}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Step 3: Anamnesis & Diagnosis */}
-      {currentStep === 3 && (
+      {/* Step 2: Anamnesis & Diagnosis */}
+      {currentStep === 2 && (
         <div className="form-section animate-slide-down space-y-6">
           <h2 className="form-section-title">Anamnéza a diagnóza</h2>
           <TextField
@@ -251,6 +232,27 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
             placeholder="Uveďte základní diagnózu a diagnostický souhrn..."
             error={errors.diagnosis}
           />
+        </div>
+      )}
+
+      {/* Step 3: Nález (Imaging exams) */}
+      {currentStep === 3 && formData.hasImagingExam && (
+        <div className="form-section animate-slide-down">
+          <h2 className="form-section-title">Zobrazovací vyšetření</h2>
+          <ImagingCheckboxes
+            selectedTypes={formData.selectedImagingTypes}
+            onChange={(types) => updateField("selectedImagingTypes", types)}
+            error={errors.imagingTypes}
+          />
+          {formData.selectedImagingTypes.length > 0 && (
+            <div className="mt-6">
+              <ImagingExamFields
+                exams={formData.imagingExams}
+                selectedTypes={formData.selectedImagingTypes}
+                onChange={(exams) => updateField("imagingExams", exams)}
+              />
+            </div>
+          )}
         </div>
       )}
 

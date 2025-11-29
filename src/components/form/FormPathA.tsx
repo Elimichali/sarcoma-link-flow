@@ -27,7 +27,7 @@ interface FormPathAProps {
   onBack: () => void;
 }
 
-const STEP_LABELS = ["Podezření", "Zobrazení", "Anamnéza", "Histologie", "Přílohy", "Kontakt"];
+const STEP_LABELS = ["Podezření", "Anamnéza", "Nález", "Přílohy", "Kontakt"];
 
 export const FormPathA = ({ onBack }: FormPathAProps) => {
   const [formData, setFormData] = useState<FormDataPathA>(initialFormDataPathA);
@@ -54,7 +54,18 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
       newErrors.suspicionReason = "Toto pole je povinné";
     }
 
+    // Step 2: Anamnéza
     if (step === 2) {
+      if (!formData.anamnesis.trim()) {
+        newErrors.anamnesis = "Toto pole je povinné";
+      }
+      if (formData.hasBloodThinners === null) {
+        newErrors.hasBloodThinners = "Toto pole je povinné";
+      }
+    }
+
+    // Step 3: Nález (Zobrazení + Histologie)
+    if (step === 3) {
       if (formData.selectedImagingTypes.length === 0) {
         newErrors.imagingTypes = "Vyberte minimálně 1 zobrazovací vyšetření";
       }
@@ -67,24 +78,13 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           newErrors[`${type}_description`] = "Popis je povinný";
         }
       });
-    }
-
-    if (step === 3) {
-      if (!formData.anamnesis.trim()) {
-        newErrors.anamnesis = "Toto pole je povinné";
-      }
-      if (formData.hasBloodThinners === null) {
-        newErrors.hasBloodThinners = "Toto pole je povinné";
-      }
-    }
-
-    if (step === 4) {
       if (formData.hasHistology === true && !formData.histologyResult.trim()) {
         newErrors.histologyResult = "Popis výsledku histologie je povinný";
       }
     }
 
-    if (step === 6) {
+    // Step 5: Kontakt
+    if (step === 5) {
       // Destination is required
       if (!formData.destination) {
         newErrors.destination = "Vyberte místo odeslání";
@@ -129,7 +129,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 6));
+      setCurrentStep((prev) => Math.min(prev + 1, 5));
     }
   };
 
@@ -138,7 +138,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(6)) return;
+    if (!validateStep(5)) return;
 
     setIsSubmitting(true);
     try {
@@ -185,13 +185,13 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   };
 
   // Show no imaging alert
-  if (currentStep === 2 && formData.hasImagingExam === false) {
+  if (currentStep === 3 && formData.hasImagingExam === false) {
     return <NoImagingAlert onBack={onBack} />;
   }
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ProgressIndicator currentStep={currentStep} totalSteps={6} labels={STEP_LABELS} />
+      <ProgressIndicator currentStep={currentStep} totalSteps={5} labels={STEP_LABELS} />
 
       {/* Step 1: Suspicion reason */}
       {currentStep === 1 && (
@@ -218,29 +218,8 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         </div>
       )}
 
-      {/* Step 2: Imaging exams */}
-      {currentStep === 2 && formData.hasImagingExam && (
-        <div className="form-section animate-slide-down">
-          <h2 className="form-section-title">Zobrazovací vyšetření</h2>
-          <ImagingCheckboxes
-            selectedTypes={formData.selectedImagingTypes}
-            onChange={(types) => updateField("selectedImagingTypes", types)}
-            error={errors.imagingTypes}
-          />
-          {formData.selectedImagingTypes.length > 0 && (
-            <div className="mt-6">
-              <ImagingExamFields
-                exams={formData.imagingExams}
-                selectedTypes={formData.selectedImagingTypes}
-                onChange={(exams) => updateField("imagingExams", exams)}
-              />
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Step 3: Anamnesis & Blood thinners */}
-      {currentStep === 3 && (
+      {/* Step 2: Anamnesis & Blood thinners */}
+      {currentStep === 2 && (
         <div className="form-section animate-slide-down space-y-6">
           <h2 className="form-section-title">Anamnéza a medikace</h2>
           <TextField
@@ -279,12 +258,29 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         </div>
       )}
 
-      {/* Step 4: Histology & Next exam */}
-      {currentStep === 4 && (
-        <div className="form-section animate-slide-down space-y-6">
-          <h2 className="form-section-title">Histologie a další vyšetření</h2>
+      {/* Step 3: Nález (Zobrazení + Histologie) */}
+      {currentStep === 3 && formData.hasImagingExam && (
+        <div className="form-section animate-slide-down space-y-8">
+          <div>
+            <h2 className="form-section-title">Zobrazovací vyšetření</h2>
+            <ImagingCheckboxes
+              selectedTypes={formData.selectedImagingTypes}
+              onChange={(types) => updateField("selectedImagingTypes", types)}
+              error={errors.imagingTypes}
+            />
+            {formData.selectedImagingTypes.length > 0 && (
+              <div className="mt-6">
+                <ImagingExamFields
+                  exams={formData.imagingExams}
+                  selectedTypes={formData.selectedImagingTypes}
+                  onChange={(exams) => updateField("imagingExams", exams)}
+                />
+              </div>
+            )}
+          </div>
 
           <div className="space-y-4">
+            <h3 className="text-base font-semibold text-foreground">Histologie a další vyšetření</h3>
             <YesNoField
               label="Byla provedena histologická verifikace?"
               value={formData.hasHistology}
@@ -355,8 +351,8 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         </div>
       )}
 
-      {/* Step 5: Attachments */}
-      {currentStep === 5 && (
+      {/* Step 4: Attachments */}
+      {currentStep === 4 && (
         <div className="form-section animate-slide-down">
           <h2 className="form-section-title">Přílohy</h2>
           <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
@@ -367,8 +363,8 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         </div>
       )}
 
-      {/* Step 6: Contact info */}
-      {currentStep === 6 && (
+      {/* Step 5: Contact info */}
+      {currentStep === 5 && (
         <div className="form-section animate-slide-down space-y-8">
           {/* Doctor contact */}
           <DoctorContactFields
@@ -413,7 +409,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           {currentStep === 1 ? "Zpět na výběr" : "Předchozí"}
         </Button>
 
-        {currentStep < 6 ? (
+        {currentStep < 5 ? (
           <Button
             onClick={handleNext}
             disabled={currentStep === 1 && formData.hasImagingExam === null}
