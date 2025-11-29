@@ -21,12 +21,15 @@ export const SuccessDialog = ({ open, onClose, destination }: SuccessDialogProps
           </div>
           <DialogTitle className="text-xl text-center">Formulář byl úspěšně odeslán</DialogTitle>
           <DialogDescription className="text-center space-y-4 pt-4">
+            <p className="text-base font-medium text-foreground">
+              Děkujeme moc za vyplnění a pomoc při včasné diagnóze.
+            </p>
             <p className="text-base">
               Vaše odpověď byla zaznamenána a odeslána na{" "}
-              <span className="font-semibold text-foreground">{destinationInfo?.fullName}</span>.
+              <span className="font-semibold text-foreground">{destinationInfo?.displayName}</span>.
             </p>
             <p className="text-sm text-muted-foreground">
-              Úřední hodiny jsou každou středu 9–12 hod. V těchto hodinách se bude vaším požadavkem zabývat pracovník nemocnice.
+              Vaším podnětem se budeme zabývat jen jak to bude možné v rámci našich ordinačních hodin – PO a PÁ 9–12 hod.
             </p>
           </DialogDescription>
         </DialogHeader>

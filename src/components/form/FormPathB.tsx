@@ -307,8 +307,8 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
             error={errors.destination}
           />
           
-          <p className="text-sm text-muted-foreground">
-            Snímky z vyšetření prosím sdílejte přes systém ePACS.
+          <p className="text-base text-foreground">
+            Sdílejte prosím snímky z vyšetření přes systém ePACS.
           </p>
           
           <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
