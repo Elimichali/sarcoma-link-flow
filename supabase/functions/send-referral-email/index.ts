@@ -40,6 +40,30 @@ const DESTINATION_NAMES: Record<string, string> = {
   brno: 'Masarykův onkologický ústav',
 };
 
+const IMAGING_LABELS: Record<string, string> = {
+  sonografie: 'Sonografie',
+  mri: 'MRI',
+  ct: 'CT',
+  pet_ct: 'PET/CT',
+  pet_mri: 'PET/MRI',
+};
+
+const INSURANCE_LABELS: Record<string, string> = {
+  '111': 'VZP (111)',
+  '201': 'VoZP (201)',
+  '205': 'ČPZP (205)',
+  '207': 'OZP (207)',
+  '209': 'ZPŠ (209)',
+  '211': 'ZPMV (211)',
+  '213': 'RBP (213)',
+};
+
+interface ImagingExam {
+  type: string;
+  date: string;
+  description: string;
+}
+
 const handler = async (req: Request): Promise<Response> => {
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -56,44 +80,77 @@ const handler = async (req: Request): Promise<Response> => {
       patientName: `${data.patientContact.firstName} ${data.patientContact.lastName}`,
     });
 
-    const destinationName = DESTINATION_NAMES[data.destination] || data.destination;
-    const formTypeName = data.formType === 'A' ? 'Nový pacient s podezřením na sarkom' : 'Stávající pacient - konzultace';
+    const formData = data.formData as Record<string, unknown>;
+    const imagingExams = (formData.imagingExams as ImagingExam[]) || [];
+    
+    // Build imaging examinations section - only show those that were done
+    let imagingSection = '';
+    imagingExams.forEach((exam: ImagingExam) => {
+      const label = IMAGING_LABELS[exam.type] || exam.type;
+      imagingSection += `<li><strong>${label}:</strong> Ano (${exam.date})${exam.description ? ` – ${exam.description}` : ''}</li>\n`;
+    });
+
+    // Histology section
+    const hasHistology = formData.hasHistology as boolean;
+    const histologyDate = formData.histologyDate as string || '';
+    const histologyResult = formData.histologyResult as string || '';
+    const histologyText = hasHistology 
+      ? `Ano${histologyDate ? ` (${histologyDate})` : ''}${histologyResult ? ` – ${histologyResult}` : ''}`
+      : 'Ne';
+
+    // Blood thinners section
+    const hasBloodThinners = formData.hasBloodThinners as boolean;
+    const bloodThinnersDetails = formData.bloodThinnersDetails as string || '';
+    const bloodThinnersText = hasBloodThinners 
+      ? `Ano – ${bloodThinnersDetails || 'neuvedeno'}`
+      : 'Ne';
+
+    // Get insurance label
+    const insuranceLabel = INSURANCE_LABELS[data.patientContact.insurance] || data.patientContact.insurance;
 
     // Build HTML email content
     const htmlContent = `
-      <h1>Referenční formulář - Sarkom</h1>
-      <h2>${formTypeName}</h2>
-      
-      <h3>Místo odeslání</h3>
-      <p><strong>${destinationName}</strong></p>
-      
-      <h3>Kontakt na ošetřujícího lékaře</h3>
-      <ul>
-        <li><strong>Jméno:</strong> ${data.doctorContact.firstName} ${data.doctorContact.lastName}</li>
-        <li><strong>Email:</strong> ${data.doctorContact.email}</li>
-        <li><strong>Telefon:</strong> ${data.doctorContact.phone}</li>
-      </ul>
-      
-      <h3>Kontakt na pacienta</h3>
-      <ul>
-        <li><strong>Jméno:</strong> ${data.patientContact.firstName} ${data.patientContact.lastName}</li>
-        <li><strong>Adresa:</strong> ${data.patientContact.address}</li>
-        <li><strong>Pojišťovna:</strong> ${data.patientContact.insurance}</li>
-        <li><strong>Rodné číslo:</strong> ${data.patientContact.birthNumber}</li>
-        <li><strong>Telefon:</strong> ${data.patientContact.phone}</li>
-        <li><strong>Email:</strong> ${data.patientContact.email}</li>
-      </ul>
-      
-      <h3>Data formuláře</h3>
-      <pre>${JSON.stringify(data.formData, null, 2)}</pre>
-      
-      <p><strong>Snímky sdíleny přes ePACS:</strong> ${data.epacsShared ? 'Ano' : 'Ne'}</p>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <h2 style="color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px;">1. KLINICKÝ NÁLEZ A ANAMNÉZA</h2>
+        <ul style="line-height: 1.8;">
+          <li><strong>Důvod podezření:</strong> ${formData.suspicionReason || formData.consultationReason || 'neuvedeno'}</li>
+          <li><strong>Anamnéza:</strong> ${formData.anamnesis || 'neuvedeno'}</li>
+          <li><strong>Upozornění:</strong> Pacient užívá léky na ředění krve – ${bloodThinnersText}</li>
+        </ul>
+
+        <h2 style="color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-top: 30px;">2. PROVEDENÁ VYŠETŘENÍ</h2>
+        ${imagingSection ? `<ul style="line-height: 1.8;">${imagingSection}</ul>` : '<p>Žádná zobrazovací vyšetření nebyla provedena.</p>'}
+        
+        <p style="margin-top: 15px;"><strong>Histologická verifikace:</strong> ${histologyText}</p>
+        
+        ${data.epacsShared ? '<p style="background-color: #e6f3ff; padding: 10px; border-left: 4px solid #0066cc; margin-top: 15px;"><strong>Poznámka:</strong> Snímky byly odeslány přes ePACS. Vyžádejte si ověření přijetí.</p>' : ''}
+
+        <h2 style="color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-top: 30px;">3. IDENTIFIKACE OŠETŘUJÍCÍHO LÉKAŘE</h2>
+        <ul style="line-height: 1.8;">
+          <li><strong>Jméno a příjmení:</strong> ${data.doctorContact.firstName} ${data.doctorContact.lastName}</li>
+          <li><strong>E-mail:</strong> ${data.doctorContact.email}</li>
+          <li><strong>Telefon:</strong> ${data.doctorContact.phone}</li>
+        </ul>
+
+        <h2 style="color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-top: 30px;">IDENTIFIKACE PACIENTA</h2>
+        <ul style="line-height: 1.8;">
+          <li><strong>Jméno a příjmení:</strong> ${data.patientContact.firstName} ${data.patientContact.lastName}</li>
+          <li><strong>Rodné číslo:</strong> ${data.patientContact.birthNumber}</li>
+          <li><strong>Pojišťovna:</strong> ${insuranceLabel}</li>
+          <li><strong>Adresa:</strong> ${data.patientContact.address}</li>
+          <li><strong>Kontakt:</strong> ${data.patientContact.phone}${data.patientContact.email ? ` / ${data.patientContact.email}` : ''}</li>
+        </ul>
+
+        <p style="margin-top: 30px; padding: 15px; background-color: #f5f5f5; border: 1px solid #ddd; font-size: 12px; color: #666;">
+          <em>Tento dokument obsahuje citlivé osobní údaje. Nakládejte s ním v souladu s GDPR.</em>
+        </p>
+      </div>
     `;
 
     const emailResponse = await resend.emails.send({
       from: "Sarkom Referral <onboarding@resend.dev>",
       to: ["eliskamichalicova@gmail.com"],
-      subject: `Nový referenční formulář - ${formTypeName} - ${data.patientContact.firstName} ${data.patientContact.lastName}`,
+      subject: `Žádost o konzultaci – podezření na sarkom (${data.patientContact.firstName} ${data.patientContact.lastName})`,
       html: htmlContent,
     });
 
