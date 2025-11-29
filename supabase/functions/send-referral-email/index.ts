@@ -101,12 +101,21 @@ const handler = async (req: Request): Promise<Response> => {
     // Blood thinners section
     const hasBloodThinners = formData.hasBloodThinners as boolean;
     const bloodThinnersDetails = formData.bloodThinnersDetails as string || '';
-    const bloodThinnersText = hasBloodThinners 
-      ? `Ano – ${bloodThinnersDetails || 'neuvedeno'}`
-      : 'Ne';
 
     // Get insurance label
     const insuranceLabel = INSURANCE_LABELS[data.patientContact.insurance] || data.patientContact.insurance;
+
+    // Blood thinners HTML - red if yes, green if no
+    const bloodThinnersHtml = hasBloodThinners
+      ? `<div style="background-color: #fee2e2; border: 2px solid #dc2626; border-radius: 8px; padding: 12px; margin: 15px 0;">
+          <strong style="color: #dc2626;">⚠️ Pacient užívá léky na ředění krve – ${bloodThinnersDetails || 'neuvedeno'}</strong>
+        </div>`
+      : `<div style="background-color: #dcfce7; border: 2px solid #16a34a; border-radius: 8px; padding: 12px; margin: 15px 0;">
+          <strong style="color: #16a34a;">✓ Pacient NE-užívá léky na ředění krve</strong>
+        </div>`;
+
+    // Histology as list item (same format as imaging)
+    const histologyListItem = `<li><strong>Histologická verifikace:</strong> ${histologyText}</li>`;
 
     // Build HTML email content
     const htmlContent = `
@@ -115,15 +124,17 @@ const handler = async (req: Request): Promise<Response> => {
         <ul style="line-height: 1.8;">
           <li><strong>Důvod podezření:</strong> ${formData.suspicionReason || formData.consultationReason || 'neuvedeno'}</li>
           <li><strong>Anamnéza:</strong> ${formData.anamnesis || 'neuvedeno'}</li>
-          <li><strong>Upozornění:</strong> Pacient užívá léky na ředění krve – ${bloodThinnersText}</li>
         </ul>
+        
+        ${bloodThinnersHtml}
 
         <h2 style="color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-top: 30px;">2. PROVEDENÁ VYŠETŘENÍ</h2>
-        ${imagingSection ? `<ul style="line-height: 1.8;">${imagingSection}</ul>` : '<p>Žádná zobrazovací vyšetření nebyla provedena.</p>'}
+        <ul style="line-height: 1.8;">
+          ${imagingSection || ''}
+          ${histologyListItem}
+        </ul>
         
-        <p style="margin-top: 15px;"><strong>Histologická verifikace:</strong> ${histologyText}</p>
-        
-        ${data.epacsShared ? '<p style="background-color: #e6f3ff; padding: 10px; border-left: 4px solid #0066cc; margin-top: 15px;"><strong>Poznámka:</strong> Snímky byly odeslány přes ePACS. Vyžádejte si ověření přijetí.</p>' : ''}
+        ${data.epacsShared ? '<p style="background-color: #e6f3ff; padding: 10px; border-left: 4px solid #0066cc; margin-top: 15px;"><strong>Poznámka:</strong> Snímky byly odeslány přes ePACS. Ověřte jejich přijetí v systému.</p>' : ''}
 
         <h2 style="color: #333; border-bottom: 2px solid #0066cc; padding-bottom: 10px; margin-top: 30px;">3. IDENTIFIKACE OŠETŘUJÍCÍHO LÉKAŘE</h2>
         <ul style="line-height: 1.8;">
@@ -138,7 +149,8 @@ const handler = async (req: Request): Promise<Response> => {
           <li><strong>Rodné číslo:</strong> ${data.patientContact.birthNumber}</li>
           <li><strong>Pojišťovna:</strong> ${insuranceLabel}</li>
           <li><strong>Adresa:</strong> ${data.patientContact.address}</li>
-          <li><strong>Kontakt:</strong> ${data.patientContact.phone}${data.patientContact.email ? ` / ${data.patientContact.email}` : ''}</li>
+          <li><strong>Telefon:</strong> ${data.patientContact.phone}</li>
+          <li><strong>E-mail:</strong> ${data.patientContact.email || 'neuvedeno'}</li>
         </ul>
 
         <p style="margin-top: 30px; padding: 15px; background-color: #f5f5f5; border: 1px solid #ddd; font-size: 12px; color: #666;">
