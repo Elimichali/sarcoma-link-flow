@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FormDataPathA, initialFormDataPathA, PatientContact, DoctorContact, DestinationType } from "@/types/form";
+import { FormDataPathA, initialFormDataPathA, PatientContact, DoctorContact, DestinationType, IMAGING_LABELS, INSURANCE_OPTIONS, DESTINATION_OPTIONS } from "@/types/form";
 import { ProgressIndicator } from "./ProgressIndicator";
 import {
   TextField,
@@ -18,6 +18,7 @@ import { ArrowLeft, ArrowRight, Send, Calendar, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -26,7 +27,7 @@ interface FormPathAProps {
   onBack: () => void;
 }
 
-const STEP_LABELS = ["Podezření", "Anamnéza", "Nález", "Přílohy", "Kontakt"];
+const STEP_LABELS = ["Podezření", "Anamnéza", "Nález", "Přílohy", "Kontakt", "Kontrola"];
 
 export const FormPathA = ({ onBack }: FormPathAProps) => {
   const [formData, setFormData] = useState<FormDataPathA>(initialFormDataPathA);
@@ -34,6 +35,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [confirmData, setConfirmData] = useState(false);
 
   const updateField = <K extends keyof FormDataPathA>(field: K, value: FormDataPathA[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -130,7 +132,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
-      setCurrentStep((prev) => Math.min(prev + 1, 5));
+      setCurrentStep((prev) => Math.min(prev + 1, 6));
     }
   };
 
@@ -139,7 +141,10 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep(5)) return;
+    if (!confirmData) {
+      toast.error("Potvrďte prosím, že všechny zadané údaje jsou úplné.");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
@@ -192,7 +197,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      <ProgressIndicator currentStep={currentStep} totalSteps={5} labels={STEP_LABELS} />
+      <ProgressIndicator currentStep={currentStep} totalSteps={6} labels={STEP_LABELS} />
 
       {/* Step 1: Suspicion reason */}
       {currentStep === 1 && (
@@ -365,13 +370,14 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           />
           
           {/* Two-step instructions */}
-          <div className="bg-muted/30 rounded-xl p-6 space-y-4">
+          <div className="bg-muted/30 rounded-xl p-6 space-y-6">
             <div className="flex items-start gap-4">
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
                 1
               </div>
-              <div className="pt-1">
-                <p className="text-base text-foreground font-medium">
+              <div className="flex-1 pt-0.5">
+                <Label className="field-label mb-1">Sdílení snímků přes ePACS</Label>
+                <p className="text-sm text-muted-foreground">
                   Sdílejte prosím snímky z vyšetření přes systém ePACS.
                 </p>
               </div>
@@ -381,7 +387,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
               <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
                 2
               </div>
-              <div className="flex-1 pt-1">
+              <div className="flex-1 pt-0.5">
                 <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
               </div>
             </div>
@@ -416,6 +422,113 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         </div>
       )}
 
+      {/* Step 6: Review */}
+      {currentStep === 6 && (
+        <div className="form-section animate-slide-down space-y-6">
+          <h2 className="form-section-title">Kontrola informací před odesláním</h2>
+          
+          <div className="space-y-4">
+            {/* Suspicion */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Důvod podezření</h4>
+              <p className="text-sm text-foreground">{formData.suspicionReason || "—"}</p>
+            </div>
+
+            {/* Anamnesis */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Anamnéza</h4>
+              <p className="text-sm text-foreground">{formData.anamnesis || "—"}</p>
+              <div className="mt-2 text-xs text-muted-foreground">
+                <span className="font-medium">Antikoagulancia:</span> {formData.hasBloodThinners ? `Ano${formData.bloodThinnersDetails ? ` (${formData.bloodThinnersDetails})` : ""}` : "Ne"}
+              </div>
+            </div>
+
+            {/* Imaging */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Zobrazovací vyšetření</h4>
+              {formData.imagingExams.length > 0 ? (
+                <div className="space-y-2">
+                  {formData.imagingExams.map((exam, idx) => (
+                    <div key={idx} className="text-sm">
+                      <span className="font-medium text-foreground">{IMAGING_LABELS[exam.type]}</span>
+                      <span className="text-muted-foreground"> — {exam.date || "bez data"}</span>
+                      {exam.description && <p className="text-xs text-muted-foreground mt-0.5">{exam.description}</p>}
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">—</p>
+              )}
+              
+              {formData.hasHistology && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <span className="text-xs font-medium text-foreground">Histologie:</span>
+                  <span className="text-xs text-muted-foreground"> {formData.histologyDate || "bez data"}</span>
+                  {formData.histologyResult && <p className="text-xs text-muted-foreground mt-0.5">{formData.histologyResult}</p>}
+                </div>
+              )}
+
+              {formData.hasNextExam && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <span className="text-xs font-medium text-foreground">Další vyšetření:</span>
+                  <span className="text-xs text-muted-foreground"> {formData.nextExamDetails} — {formData.nextExamDate || "bez data"}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Destination */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Místo odeslání</h4>
+              <p className="text-sm text-foreground">
+                {DESTINATION_OPTIONS.find(d => d.value === formData.destination)?.fullName || "—"}
+              </p>
+              {formData.attachments.length > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Přílohy: {formData.attachments.map(f => f.name).join(", ")}
+                </p>
+              )}
+            </div>
+
+            {/* Doctor Contact */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kontakt na lékaře</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <div><span className="text-muted-foreground">Jméno:</span> <span className="text-foreground">{formData.doctorContact.firstName} {formData.doctorContact.lastName}</span></div>
+                <div><span className="text-muted-foreground">Email:</span> <span className="text-foreground">{formData.doctorContact.email}</span></div>
+                <div><span className="text-muted-foreground">Telefon:</span> <span className="text-foreground">{formData.doctorContact.phone}</span></div>
+              </div>
+            </div>
+
+            {/* Patient Contact */}
+            <div className="bg-muted/30 rounded-lg p-4">
+              <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Kontakt na pacienta</h4>
+              <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-sm">
+                <div><span className="text-muted-foreground">Jméno:</span> <span className="text-foreground">{formData.patientContact.firstName} {formData.patientContact.lastName}</span></div>
+                <div><span className="text-muted-foreground">Rodné číslo:</span> <span className="text-foreground">{formData.patientContact.birthNumber}</span></div>
+                <div><span className="text-muted-foreground">Adresa:</span> <span className="text-foreground">{formData.patientContact.address}</span></div>
+                <div><span className="text-muted-foreground">Pojišťovna:</span> <span className="text-foreground">{INSURANCE_OPTIONS.find(i => i.value === formData.patientContact.insurance)?.label || formData.patientContact.insurance}</span></div>
+                <div><span className="text-muted-foreground">Email:</span> <span className="text-foreground">{formData.patientContact.email}</span></div>
+                <div><span className="text-muted-foreground">Telefon:</span> <span className="text-foreground">{formData.patientContact.phone}</span></div>
+              </div>
+            </div>
+          </div>
+
+          {/* Confirmation checkbox */}
+          <div className="bg-sarcoma/10 border border-sarcoma/30 rounded-lg p-4">
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={confirmData}
+                onCheckedChange={(checked) => setConfirmData(checked === true)}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-foreground">
+                Potvrzuji, že všechny zadané údaje jsou úplné a správné.
+              </span>
+            </label>
+          </div>
+        </div>
+      )}
+
       {/* Navigation */}
       <div className="flex justify-between items-center pt-4">
         <Button
@@ -428,7 +541,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           {currentStep === 1 ? "Zpět na výběr" : "Předchozí"}
         </Button>
 
-        {currentStep < 5 ? (
+        {currentStep < 6 ? (
           <Button
             onClick={handleNext}
             disabled={currentStep === 1 && formData.hasImagingExam === null}
@@ -438,7 +551,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={handleSubmit} variant="success" className="gap-2" disabled={isSubmitting}>
+          <Button onClick={handleSubmit} variant="success" className="gap-2" disabled={isSubmitting || !confirmData}>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
