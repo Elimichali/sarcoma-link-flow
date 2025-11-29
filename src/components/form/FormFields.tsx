@@ -237,7 +237,7 @@ export const FileUpload = ({ files, onChange }: FileUploadProps) => {
 
   return (
     <div className="space-y-3">
-      <Label className="field-label">Zde nahrajte jakékoli doplňující dokumenty (např. zprávy od lékaře)</Label>
+      <Label className="field-label">Zde volitelně nahrajte jakékoli doplňující dokumenty (např. zprávy od lékaře)</Label>
       <p className="field-description">Podporované formáty: PDF, JPG, PNG (max. 10 MB)</p>
       
       <div

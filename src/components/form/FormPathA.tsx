@@ -364,11 +364,28 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
             error={errors.destination}
           />
           
-          <p className="text-base text-foreground">
-            Sdílejte prosím snímky z vyšetření přes systém ePACS.
-          </p>
-          
-          <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
+          {/* Two-step instructions */}
+          <div className="bg-muted/30 rounded-xl p-6 space-y-4">
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                1
+              </div>
+              <div className="pt-1">
+                <p className="text-base text-foreground font-medium">
+                  Sdílejte prosím snímky z vyšetření přes systém ePACS.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex items-start gap-4">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-semibold text-sm">
+                2
+              </div>
+              <div className="flex-1 pt-1">
+                <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
