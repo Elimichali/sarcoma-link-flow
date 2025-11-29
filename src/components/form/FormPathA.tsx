@@ -51,17 +51,27 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   const validateStep = (step: number): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (step === 1 && !formData.suspicionReason.trim()) {
-      newErrors.suspicionReason = "Toto pole je povinné";
+    // Step 1: Suspicion reason with length limit
+    if (step === 1) {
+      if (!formData.suspicionReason.trim()) {
+        newErrors.suspicionReason = "Toto pole je povinné";
+      } else if (formData.suspicionReason.length > 2000) {
+        newErrors.suspicionReason = "Text nesmí být delší než 2000 znaků";
+      }
     }
 
-    // Step 2: Anamnéza
+    // Step 2: Anamnéza with length limit
     if (step === 2) {
       if (!formData.anamnesis.trim()) {
         newErrors.anamnesis = "Toto pole je povinné";
+      } else if (formData.anamnesis.length > 5000) {
+        newErrors.anamnesis = "Text nesmí být delší než 5000 znaků";
       }
       if (formData.hasBloodThinners === null) {
         newErrors.hasBloodThinners = "Toto pole je povinné";
+      }
+      if (formData.bloodThinnersDetails && formData.bloodThinnersDetails.length > 500) {
+        newErrors.bloodThinnersDetails = "Text nesmí být delší než 500 znaků";
       }
     }
 
@@ -77,10 +87,16 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         }
         if (!exam?.description?.trim()) {
           newErrors[`${type}_description`] = "Popis je povinný";
+        } else if (exam.description.length > 2000) {
+          newErrors[`${type}_description`] = "Text nesmí být delší než 2000 znaků";
         }
       });
-      if (formData.hasHistology === true && !formData.histologyResult.trim()) {
-        newErrors.histologyResult = "Popis výsledku histologie je povinný";
+      if (formData.hasHistology === true) {
+        if (!formData.histologyResult.trim()) {
+          newErrors.histologyResult = "Popis výsledku histologie je povinný";
+        } else if (formData.histologyResult.length > 2000) {
+          newErrors.histologyResult = "Text nesmí být delší než 2000 znaků";
+        }
       }
     }
 
@@ -93,11 +109,20 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
     // Step 5: Kontakt
     if (step === 5) {
-      // Doctor contact validation
+      // Doctor contact validation with length limits
       const doctorFields: (keyof DoctorContact)[] = ["firstName", "lastName", "email", "phone"];
       doctorFields.forEach((field) => {
-        if (!formData.doctorContact[field].trim()) {
+        const value = formData.doctorContact[field];
+        if (!value.trim()) {
           newErrors[`doctor_${field}`] = "Toto pole je povinné";
+        } else if (field === "firstName" || field === "lastName") {
+          if (value.length > 100) {
+            newErrors[`doctor_${field}`] = "Text nesmí být delší než 100 znaků";
+          }
+        } else if (field === "email" && value.length > 255) {
+          newErrors.doctor_email = "Email nesmí být delší než 255 znaků";
+        } else if (field === "phone" && value.length > 20) {
+          newErrors.doctor_phone = "Telefon nesmí být delší než 20 znaků";
         }
       });
 
@@ -105,7 +130,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         newErrors.doctor_email = "Neplatný formát emailu";
       }
 
-      // Patient contact validation
+      // Patient contact validation with length limits
       const patientFields: (keyof PatientContact)[] = [
         "firstName",
         "lastName",
@@ -116,8 +141,21 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         "email",
       ];
       patientFields.forEach((field) => {
-        if (!formData.patientContact[field].trim()) {
+        const value = formData.patientContact[field];
+        if (!value.trim()) {
           newErrors[`patient_${field}`] = "Toto pole je povinné";
+        } else if (field === "firstName" || field === "lastName") {
+          if (value.length > 100) {
+            newErrors[`patient_${field}`] = "Text nesmí být delší než 100 znaků";
+          }
+        } else if (field === "address" && value.length > 500) {
+          newErrors.patient_address = "Adresa nesmí být delší než 500 znaků";
+        } else if (field === "birthNumber" && value.length > 20) {
+          newErrors.patient_birthNumber = "Rodné číslo nesmí být delší než 20 znaků";
+        } else if (field === "email" && value.length > 255) {
+          newErrors.patient_email = "Email nesmí být delší než 255 znaků";
+        } else if (field === "phone" && value.length > 20) {
+          newErrors.patient_phone = "Telefon nesmí být delší než 20 znaků";
         }
       });
 

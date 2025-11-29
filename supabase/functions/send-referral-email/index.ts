@@ -95,6 +95,25 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // CSRF Protection: Validate Origin header
+    const origin = req.headers.get("origin");
+    const allowedOrigins = [
+      Deno.env.get("VITE_SUPABASE_URL"),
+      "http://localhost:5173",
+      "http://localhost:8081",
+    ];
+    
+    if (!origin || !allowedOrigins.some(allowed => origin.startsWith(allowed || ""))) {
+      console.warn(`CSRF: Invalid origin: ${origin}`);
+      return new Response(
+        JSON.stringify({ error: "Neplatný původ požadavku" }),
+        {
+          status: 403,
+          headers: { "Content-Type": "application/json", ...corsHeaders },
+        }
+      );
+    }
+    
     // Rate limiting: Extract IP address
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || 
                req.headers.get("x-real-ip") || 
