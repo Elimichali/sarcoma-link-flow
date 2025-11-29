@@ -8,6 +8,13 @@ export interface ImagingExam {
   description: string;
 }
 
+export type DestinationType = 'praha' | 'brno';
+
+export const DESTINATION_OPTIONS: { value: DestinationType; label: string; fullName: string }[] = [
+  { value: 'praha', label: 'Praha', fullName: 'Fakultní nemocnice Motol' },
+  { value: 'brno', label: 'Brno', fullName: 'Masarykův onkologický ústav' },
+];
+
 export interface PatientContact {
   firstName: string;
   lastName: string;
@@ -16,6 +23,7 @@ export interface PatientContact {
   birthNumber: string;
   phone: string;
   email: string;
+  destination: DestinationType | '';
 }
 
 export interface FormDataPathA {
@@ -33,6 +41,7 @@ export interface FormDataPathA {
   nextExamDetails: string;
   nextExamDate: string;
   attachments: File[];
+  epacsShared: boolean;
   patientContact: PatientContact;
 }
 
@@ -47,6 +56,7 @@ export interface FormDataPathB {
   nextExamDetails: string;
   nextExamDate: string;
   attachments: File[];
+  epacsShared: boolean;
   patientContact: PatientContact;
 }
 
@@ -76,6 +86,7 @@ export const initialPatientContact: PatientContact = {
   birthNumber: '',
   phone: '',
   email: '',
+  destination: '',
 };
 
 export const initialFormDataPathA: FormDataPathA = {
@@ -93,6 +104,7 @@ export const initialFormDataPathA: FormDataPathA = {
   nextExamDetails: '',
   nextExamDate: '',
   attachments: [],
+  epacsShared: false,
   patientContact: { ...initialPatientContact },
 };
 
@@ -107,5 +119,6 @@ export const initialFormDataPathB: FormDataPathB = {
   nextExamDetails: '',
   nextExamDate: '',
   attachments: [],
+  epacsShared: false,
   patientContact: { ...initialPatientContact },
 };

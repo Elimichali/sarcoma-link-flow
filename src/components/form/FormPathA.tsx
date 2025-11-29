@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FormDataPathA, initialFormDataPathA, ImagingType, PatientContact } from "@/types/form";
+import { FormDataPathA, initialFormDataPathA, PatientContact, DestinationType } from "@/types/form";
 import { ProgressIndicator } from "./ProgressIndicator";
 import {
   TextField,
@@ -10,13 +10,15 @@ import {
   FileUpload,
   PatientContactFields,
   EPacsNotice,
+  EPacsCheckbox,
 } from "./FormFields";
+import { SuccessDialog } from "./SuccessDialog";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, ArrowRight, Send, Calendar } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 interface FormPathAProps {
   onBack: () => void;
@@ -28,6 +30,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   const [formData, setFormData] = useState<FormDataPathA>(initialFormDataPathA);
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
 
   const updateField = <K extends keyof FormDataPathA>(field: K, value: FormDataPathA[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -62,11 +65,29 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
       });
     }
 
-    if (step === 3 && !formData.anamnesis.trim()) {
-      newErrors.anamnesis = "Toto pole je povinné";
+    if (step === 3) {
+      if (!formData.anamnesis.trim()) {
+        newErrors.anamnesis = "Toto pole je povinné";
+      }
+      // Blood thinners is required
+      if (formData.hasBloodThinners === null) {
+        newErrors.hasBloodThinners = "Toto pole je povinné";
+      }
+    }
+
+    if (step === 4) {
+      // If histology was performed, histology result is required
+      if (formData.hasHistology === true && !formData.histologyResult.trim()) {
+        newErrors.histologyResult = "Popis výsledku histologie je povinný";
+      }
     }
 
     if (step === 6) {
+      // Destination is required
+      if (!formData.patientContact.destination) {
+        newErrors.contact_destination = "Vyberte místo odeslání";
+      }
+
       const contactFields: (keyof PatientContact)[] = [
         "firstName",
         "lastName",
@@ -104,10 +125,16 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   const handleSubmit = () => {
     if (validateStep(6)) {
       console.log("Form submitted:", formData);
-      toast.success("Formulář byl úspěšně odeslán", {
-        description: "Koordinátor onkologické péče bude informován.",
-      });
+      setShowSuccessDialog(true);
     }
+  };
+
+  const handleCloseSuccessDialog = () => {
+    setShowSuccessDialog(false);
+    // Reset form and go back to path selection
+    setFormData(initialFormDataPathA);
+    setCurrentStep(1);
+    onBack();
   };
 
   // Show no imaging alert
@@ -180,12 +207,17 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
             error={errors.anamnesis}
           />
           <div className="space-y-4">
-            <YesNoField
-              label="Léky na ředění krve"
-              value={formData.hasBloodThinners}
-              onChange={(v) => updateField("hasBloodThinners", v)}
-              required
-            />
+            <div className="space-y-2">
+              <YesNoField
+                label="Léky na ředění krve"
+                value={formData.hasBloodThinners}
+                onChange={(v) => updateField("hasBloodThinners", v)}
+                required
+              />
+              {errors.hasBloodThinners && (
+                <p className="text-xs text-destructive">{errors.hasBloodThinners}</p>
+              )}
+            </div>
             {formData.hasBloodThinners && (
               <div className="animate-slide-down">
                 <TextField
@@ -225,13 +257,19 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
                   </div>
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs text-muted-foreground">Výsledek a bližší popis</Label>
+                  <Label className="text-xs text-muted-foreground">
+                    Výsledek a bližší popis<span className="text-destructive ml-0.5">*</span>
+                  </Label>
                   <Textarea
                     value={formData.histologyResult}
                     onChange={(e) => updateField("histologyResult", e.target.value)}
                     placeholder="Popište výsledek histologického vyšetření..."
                     rows={3}
+                    className={cn(errors.histologyResult && "border-destructive")}
                   />
+                  {errors.histologyResult && (
+                    <p className="text-xs text-destructive">{errors.histologyResult}</p>
+                  )}
                 </div>
               </div>
             )}
@@ -275,6 +313,10 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         <div className="form-section animate-slide-down">
           <h2 className="form-section-title">Přílohy</h2>
           <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
+          <EPacsCheckbox
+            checked={formData.epacsShared}
+            onChange={(checked) => updateField("epacsShared", checked)}
+          />
         </div>
       )}
 
@@ -321,6 +363,13 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           </Button>
         )}
       </div>
+
+      {/* Success Dialog */}
+      <SuccessDialog
+        open={showSuccessDialog}
+        onClose={handleCloseSuccessDialog}
+        destination={formData.patientContact.destination as DestinationType}
+      />
     </div>
   );
 };

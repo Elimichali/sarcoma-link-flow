@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { ImagingType, IMAGING_LABELS, ImagingExam, INSURANCE_OPTIONS, PatientContact } from "@/types/form";
+import { ImagingType, IMAGING_LABELS, ImagingExam, INSURANCE_OPTIONS, PatientContact, DESTINATION_OPTIONS, DestinationType } from "@/types/form";
 import { AlertTriangle, Calendar, Upload, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
@@ -302,6 +302,37 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
     <div className="space-y-4">
       <h3 className="form-section-title">Kontaktní údaje pacienta</h3>
       
+      {/* Destination selection */}
+      <div className="space-y-3">
+        <Label className="field-label">
+          Místo odeslání<span className="field-required">*</span>
+        </Label>
+        <RadioGroup
+          value={contact.destination}
+          onValueChange={(value) => updateField('destination', value as DestinationType)}
+          className="flex flex-col sm:flex-row gap-3"
+        >
+          {DESTINATION_OPTIONS.map((option) => (
+            <label
+              key={option.value}
+              className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all flex-1",
+                contact.destination === option.value
+                  ? "border-primary bg-primary/5 text-foreground"
+                  : "border-border bg-background hover:border-primary/50"
+              )}
+            >
+              <RadioGroupItem value={option.value} id={`destination-${option.value}`} />
+              <div>
+                <span className="font-medium">{option.label}</span>
+                <p className="text-xs text-muted-foreground">{option.fullName}</p>
+              </div>
+            </label>
+          ))}
+        </RadioGroup>
+        {errors.destination && <p className="text-xs text-destructive">{errors.destination}</p>}
+      </div>
+
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
           <Label className="field-label">
@@ -409,6 +440,27 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
           {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
         </div>
       </div>
+    </div>
+  );
+};
+
+interface EPacsCheckboxProps {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+}
+
+export const EPacsCheckbox = ({ checked, onChange }: EPacsCheckboxProps) => {
+  return (
+    <div className="mt-6">
+      <label className="flex items-center gap-3 cursor-pointer">
+        <Checkbox
+          checked={checked}
+          onCheckedChange={(value) => onChange(value === true)}
+        />
+        <span className="text-sm font-medium text-foreground">
+          Snímky byly sdíleny přes systém ePACS
+        </span>
+      </label>
     </div>
   );
 };
