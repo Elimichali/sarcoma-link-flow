@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { FormDataPathA, initialFormDataPathA, PatientContact, DestinationType } from "@/types/form";
+import { FormDataPathA, initialFormDataPathA, PatientContact, DoctorContact, DestinationType } from "@/types/form";
 import { ProgressIndicator } from "./ProgressIndicator";
 import {
   TextField,
@@ -9,16 +9,19 @@ import {
   NoImagingAlert,
   FileUpload,
   PatientContactFields,
-  EPacsNotice,
+  DoctorContactFields,
+  DestinationSelector,
   EPacsCheckbox,
 } from "./FormFields";
 import { SuccessDialog } from "./SuccessDialog";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, ArrowRight, Send, Calendar } from "lucide-react";
+import { ArrowLeft, ArrowRight, Send, Calendar, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface FormPathAProps {
   onBack: () => void;
@@ -31,6 +34,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   const [currentStep, setCurrentStep] = useState(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const updateField = <K extends keyof FormDataPathA>(field: K, value: FormDataPathA[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -69,14 +73,12 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
       if (!formData.anamnesis.trim()) {
         newErrors.anamnesis = "Toto pole je povinné";
       }
-      // Blood thinners is required
       if (formData.hasBloodThinners === null) {
         newErrors.hasBloodThinners = "Toto pole je povinné";
       }
     }
 
     if (step === 4) {
-      // If histology was performed, histology result is required
       if (formData.hasHistology === true && !formData.histologyResult.trim()) {
         newErrors.histologyResult = "Popis výsledku histologie je povinný";
       }
@@ -84,11 +86,24 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
     if (step === 6) {
       // Destination is required
-      if (!formData.patientContact.destination) {
-        newErrors.contact_destination = "Vyberte místo odeslání";
+      if (!formData.destination) {
+        newErrors.destination = "Vyberte místo odeslání";
       }
 
-      const contactFields: (keyof PatientContact)[] = [
+      // Doctor contact validation
+      const doctorFields: (keyof DoctorContact)[] = ["firstName", "lastName", "email", "phone"];
+      doctorFields.forEach((field) => {
+        if (!formData.doctorContact[field].trim()) {
+          newErrors[`doctor_${field}`] = "Toto pole je povinné";
+        }
+      });
+
+      if (formData.doctorContact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.doctorContact.email)) {
+        newErrors.doctor_email = "Neplatný formát emailu";
+      }
+
+      // Patient contact validation
+      const patientFields: (keyof PatientContact)[] = [
         "firstName",
         "lastName",
         "address",
@@ -97,14 +112,14 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         "phone",
         "email",
       ];
-      contactFields.forEach((field) => {
+      patientFields.forEach((field) => {
         if (!formData.patientContact[field].trim()) {
-          newErrors[`contact_${field}`] = "Toto pole je povinné";
+          newErrors[`patient_${field}`] = "Toto pole je povinné";
         }
       });
 
       if (formData.patientContact.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.patientContact.email)) {
-        newErrors.contact_email = "Neplatný formát emailu";
+        newErrors.patient_email = "Neplatný formát emailu";
       }
     }
 
@@ -122,16 +137,48 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
     setCurrentStep((prev) => Math.max(prev - 1, 1));
   };
 
-  const handleSubmit = () => {
-    if (validateStep(6)) {
-      console.log("Form submitted:", formData);
+  const handleSubmit = async () => {
+    if (!validateStep(6)) return;
+
+    setIsSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('send-referral-email', {
+        body: {
+          formType: 'A',
+          destination: formData.destination,
+          doctorContact: formData.doctorContact,
+          patientContact: formData.patientContact,
+          epacsShared: formData.epacsShared,
+          formData: {
+            suspicionReason: formData.suspicionReason,
+            imagingExams: formData.imagingExams,
+            anamnesis: formData.anamnesis,
+            hasBloodThinners: formData.hasBloodThinners,
+            bloodThinnersDetails: formData.bloodThinnersDetails,
+            hasHistology: formData.hasHistology,
+            histologyDate: formData.histologyDate,
+            histologyResult: formData.histologyResult,
+            hasNextExam: formData.hasNextExam,
+            nextExamDetails: formData.nextExamDetails,
+            nextExamDate: formData.nextExamDate,
+          },
+        },
+      });
+
+      if (error) throw error;
+
+      console.log("Form submitted successfully:", data);
       setShowSuccessDialog(true);
+    } catch (error) {
+      console.error("Error submitting form:", error);
+      toast.error("Chyba při odesílání formuláře. Zkuste to prosím znovu.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const handleCloseSuccessDialog = () => {
     setShowSuccessDialog(false);
-    // Reset form and go back to path selection
     setFormData(initialFormDataPathA);
     setCurrentStep(1);
     onBack();
@@ -320,19 +367,37 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
         </div>
       )}
 
-      {/* Step 6: Patient contact */}
+      {/* Step 6: Contact info */}
       {currentStep === 6 && (
-        <div className="form-section animate-slide-down space-y-6">
+        <div className="form-section animate-slide-down space-y-8">
+          {/* Doctor contact */}
+          <DoctorContactFields
+            contact={formData.doctorContact}
+            onChange={(contact) => updateField("doctorContact", contact)}
+            errors={Object.fromEntries(
+              Object.entries(errors)
+                .filter(([k]) => k.startsWith("doctor_"))
+                .map(([k, v]) => [k.replace("doctor_", ""), v])
+            )}
+          />
+
+          {/* Destination selector */}
+          <DestinationSelector
+            value={formData.destination}
+            onChange={(value) => updateField("destination", value)}
+            error={errors.destination}
+          />
+
+          {/* Patient contact */}
           <PatientContactFields
             contact={formData.patientContact}
             onChange={(contact) => updateField("patientContact", contact)}
             errors={Object.fromEntries(
               Object.entries(errors)
-                .filter(([k]) => k.startsWith("contact_"))
-                .map(([k, v]) => [k.replace("contact_", ""), v])
+                .filter(([k]) => k.startsWith("patient_"))
+                .map(([k, v]) => [k.replace("patient_", ""), v])
             )}
           />
-          <EPacsNotice />
         </div>
       )}
 
@@ -342,6 +407,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           variant="outline"
           onClick={currentStep === 1 ? onBack : handlePrev}
           className="gap-2"
+          disabled={isSubmitting}
         >
           <ArrowLeft className="w-4 h-4" />
           {currentStep === 1 ? "Zpět na výběr" : "Předchozí"}
@@ -357,9 +423,18 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={handleSubmit} variant="success" className="gap-2">
-            <Send className="w-4 h-4" />
-            Odeslat formulář
+          <Button onClick={handleSubmit} variant="success" className="gap-2" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Odesílám...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                Odeslat formulář
+              </>
+            )}
           </Button>
         )}
       </div>
@@ -368,7 +443,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
       <SuccessDialog
         open={showSuccessDialog}
         onClose={handleCloseSuccessDialog}
-        destination={formData.patientContact.destination as DestinationType}
+        destination={formData.destination as DestinationType}
       />
     </div>
   );

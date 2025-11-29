@@ -5,7 +5,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import { ImagingType, IMAGING_LABELS, ImagingExam, INSURANCE_OPTIONS, PatientContact, DESTINATION_OPTIONS, DestinationType } from "@/types/form";
+import { ImagingType, IMAGING_LABELS, ImagingExam, INSURANCE_OPTIONS, PatientContact, DoctorContact, DESTINATION_OPTIONS, DestinationType } from "@/types/form";
 import { AlertTriangle, Calendar, Upload, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useRef } from "react";
@@ -287,6 +287,122 @@ export const FileUpload = ({ files, onChange }: FileUploadProps) => {
   );
 };
 
+interface DestinationSelectorProps {
+  value: DestinationType | '';
+  onChange: (value: DestinationType) => void;
+  error?: string;
+}
+
+export const DestinationSelector = ({ value, onChange, error }: DestinationSelectorProps) => {
+  return (
+    <div className="space-y-3">
+      <Label className="field-label">
+        Místo odeslání (kam chcete pacienta objednat)<span className="field-required">*</span>
+      </Label>
+      <RadioGroup
+        value={value}
+        onValueChange={(v) => onChange(v as DestinationType)}
+        className="flex flex-col sm:flex-row gap-3"
+      >
+        {DESTINATION_OPTIONS.map((option) => (
+          <label
+            key={option.value}
+            className={cn(
+              "flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all flex-1",
+              value === option.value
+                ? "border-primary bg-primary/5 text-foreground"
+                : "border-border bg-background hover:border-primary/50"
+            )}
+          >
+            <RadioGroupItem value={option.value} id={`destination-${option.value}`} />
+            <div>
+              <span className="font-medium">{option.label}</span>
+              <p className="text-xs text-muted-foreground">{option.fullName}</p>
+            </div>
+          </label>
+        ))}
+      </RadioGroup>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+    </div>
+  );
+};
+
+interface DoctorContactFieldsProps {
+  contact: DoctorContact;
+  onChange: (contact: DoctorContact) => void;
+  errors?: Partial<Record<keyof DoctorContact, string>>;
+}
+
+export const DoctorContactFields = ({ contact, onChange, errors = {} }: DoctorContactFieldsProps) => {
+  const updateField = (field: keyof DoctorContact, value: string) => {
+    onChange({ ...contact, [field]: value });
+  };
+
+  return (
+    <div className="space-y-4">
+      <h3 className="form-section-title">Kontakt na ošetřujícího lékaře</h3>
+      
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="field-label">
+            Jméno<span className="field-required">*</span>
+          </Label>
+          <Input
+            value={contact.firstName}
+            onChange={(e) => updateField('firstName', e.target.value)}
+            placeholder="Jan"
+            className={cn(errors.firstName && "border-destructive")}
+          />
+          {errors.firstName && <p className="text-xs text-destructive">{errors.firstName}</p>}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="field-label">
+            Příjmení<span className="field-required">*</span>
+          </Label>
+          <Input
+            value={contact.lastName}
+            onChange={(e) => updateField('lastName', e.target.value)}
+            placeholder="Novák"
+            className={cn(errors.lastName && "border-destructive")}
+          />
+          {errors.lastName && <p className="text-xs text-destructive">{errors.lastName}</p>}
+        </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-1.5">
+          <Label className="field-label">
+            Email<span className="field-required">*</span>
+          </Label>
+          <Input
+            type="email"
+            value={contact.email}
+            onChange={(e) => updateField('email', e.target.value)}
+            placeholder="jan.novak@nemocnice.cz"
+            className={cn(errors.email && "border-destructive")}
+          />
+          {errors.email && <p className="text-xs text-destructive">{errors.email}</p>}
+        </div>
+
+        <div className="space-y-1.5">
+          <Label className="field-label">
+            Telefon<span className="field-required">*</span>
+          </Label>
+          <Input
+            type="tel"
+            value={contact.phone}
+            onChange={(e) => updateField('phone', e.target.value)}
+            placeholder="+420 123 456 789"
+            className={cn(errors.phone && "border-destructive")}
+          />
+          {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 interface PatientContactFieldsProps {
   contact: PatientContact;
   onChange: (contact: PatientContact) => void;
@@ -301,37 +417,6 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
   return (
     <div className="space-y-4">
       <h3 className="form-section-title">Kontaktní údaje pacienta</h3>
-      
-      {/* Destination selection */}
-      <div className="space-y-3">
-        <Label className="field-label">
-          Místo odeslání<span className="field-required">*</span>
-        </Label>
-        <RadioGroup
-          value={contact.destination}
-          onValueChange={(value) => updateField('destination', value as DestinationType)}
-          className="flex flex-col sm:flex-row gap-3"
-        >
-          {DESTINATION_OPTIONS.map((option) => (
-            <label
-              key={option.value}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 rounded-lg border cursor-pointer transition-all flex-1",
-                contact.destination === option.value
-                  ? "border-primary bg-primary/5 text-foreground"
-                  : "border-border bg-background hover:border-primary/50"
-              )}
-            >
-              <RadioGroupItem value={option.value} id={`destination-${option.value}`} />
-              <div>
-                <span className="font-medium">{option.label}</span>
-                <p className="text-xs text-muted-foreground">{option.fullName}</p>
-              </div>
-            </label>
-          ))}
-        </RadioGroup>
-        {errors.destination && <p className="text-xs text-destructive">{errors.destination}</p>}
-      </div>
 
       <div className="grid md:grid-cols-2 gap-4">
         <div className="space-y-1.5">
@@ -452,31 +537,18 @@ interface EPacsCheckboxProps {
 export const EPacsCheckbox = ({ checked, onChange }: EPacsCheckboxProps) => {
   return (
     <div className="mt-6">
-      <label className="flex items-center gap-3 cursor-pointer">
-        <Checkbox
-          checked={checked}
-          onCheckedChange={(value) => onChange(value === true)}
-        />
+      <label className="flex items-start gap-3 cursor-pointer">
+        <div className="mt-0.5">
+          <Checkbox
+            checked={checked}
+            onCheckedChange={(value) => onChange(value === true)}
+            className="h-5 w-5 rounded-none border-2"
+          />
+        </div>
         <span className="text-sm font-medium text-foreground">
           Snímky byly sdíleny přes systém ePACS
         </span>
       </label>
-    </div>
-  );
-};
-
-export const EPacsNotice = () => {
-  return (
-    <div className="alert-info flex items-start gap-3">
-      <div className="w-8 h-8 rounded-lg bg-primary/20 flex items-center justify-center flex-shrink-0">
-        <FileText className="w-4 h-4 text-primary" />
-      </div>
-      <div>
-        <p className="font-medium text-primary">Důležité upozornění</p>
-        <p className="text-sm text-primary/80 mt-1">
-          PROSÍM ZAŠLETE VÝSLEDKY ZOBRAZOVACÍCH METOD PŘES ePACS
-        </p>
-      </div>
     </div>
   );
 };

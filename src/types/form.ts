@@ -15,6 +15,13 @@ export const DESTINATION_OPTIONS: { value: DestinationType; label: string; fullN
   { value: 'brno', label: 'Brno', fullName: 'Masarykův onkologický ústav' },
 ];
 
+export interface DoctorContact {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
 export interface PatientContact {
   firstName: string;
   lastName: string;
@@ -23,7 +30,6 @@ export interface PatientContact {
   birthNumber: string;
   phone: string;
   email: string;
-  destination: DestinationType | '';
 }
 
 export interface FormDataPathA {
@@ -42,6 +48,8 @@ export interface FormDataPathA {
   nextExamDate: string;
   attachments: File[];
   epacsShared: boolean;
+  destination: DestinationType | '';
+  doctorContact: DoctorContact;
   patientContact: PatientContact;
 }
 
@@ -57,6 +65,8 @@ export interface FormDataPathB {
   nextExamDate: string;
   attachments: File[];
   epacsShared: boolean;
+  destination: DestinationType | '';
+  doctorContact: DoctorContact;
   patientContact: PatientContact;
 }
 
@@ -78,6 +88,13 @@ export const INSURANCE_OPTIONS = [
   { value: '213', label: 'RBP (213)' },
 ];
 
+export const initialDoctorContact: DoctorContact = {
+  firstName: '',
+  lastName: '',
+  email: '',
+  phone: '',
+};
+
 export const initialPatientContact: PatientContact = {
   firstName: '',
   lastName: '',
@@ -86,7 +103,6 @@ export const initialPatientContact: PatientContact = {
   birthNumber: '',
   phone: '',
   email: '',
-  destination: '',
 };
 
 export const initialFormDataPathA: FormDataPathA = {
@@ -105,6 +121,8 @@ export const initialFormDataPathA: FormDataPathA = {
   nextExamDate: '',
   attachments: [],
   epacsShared: false,
+  destination: '',
+  doctorContact: { ...initialDoctorContact },
   patientContact: { ...initialPatientContact },
 };
 
@@ -120,5 +138,7 @@ export const initialFormDataPathB: FormDataPathB = {
   nextExamDate: '',
   attachments: [],
   epacsShared: false,
+  destination: '',
+  doctorContact: { ...initialDoctorContact },
   patientContact: { ...initialPatientContact },
 };
