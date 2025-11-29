@@ -235,7 +235,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
           <div className="space-y-4">
             <div className="space-y-2">
               <YesNoField
-                label="Léky na ředění krve"
+                label="Užívá pacient antikoagulancia?"
                 value={formData.hasBloodThinners}
                 onChange={(v) => updateField("hasBloodThinners", v)}
                 required
@@ -306,7 +306,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
                   <Textarea
                     value={formData.histologyResult}
                     onChange={(e) => updateField("histologyResult", e.target.value)}
-                    placeholder="Popište výsledek histologického vyšetření..."
+                    placeholder="Popište výsledek histologického vyšetření (můžete vložit zkopírovaný text)..."
                     rows={3}
                     className={cn(errors.histologyResult && "border-destructive")}
                   />
