@@ -176,10 +176,10 @@ export const ImagingExamFields = ({ exams, selectedTypes, onChange }: ImagingExa
               <Label className="text-xs text-muted-foreground">
                 Popis výsledku<span className="field-required">*</span>
               </Label>
-                <Textarea
+              <Textarea
                   value={getExamValue(type, 'description')}
                   onChange={(e) => updateExam(type, 'description', e.target.value)}
-                  placeholder="Popište výsledek vyšetření (můžete vložit zkopírovaný text)..."
+                  placeholder="Popište výsledek vyšetření a uveďte v jakém pracovišti bylo provedeno (můžete vložit zkopírovaný text)…"
                   rows={2}
                 />
             </div>
@@ -399,6 +399,10 @@ export const DoctorContactFields = ({ contact, onChange, errors = {} }: DoctorCo
           {errors.phone && <p className="text-xs text-destructive">{errors.phone}</p>}
         </div>
       </div>
+
+      <p className="text-sm text-muted-foreground mt-2">
+        Budeme Vás kontaktovat jen v urgentních případech.
+      </p>
     </div>
   );
 };

@@ -11,8 +11,8 @@ export interface ImagingExam {
 export type DestinationType = 'praha' | 'brno';
 
 export const DESTINATION_OPTIONS: { value: DestinationType; label: string; fullName: string }[] = [
-  { value: 'praha', label: 'Praha', fullName: 'Fakultní nemocnice Motol' },
-  { value: 'brno', label: 'Brno', fullName: 'Masarykův onkologický ústav' },
+  { value: 'praha', label: 'Praha', fullName: 'Fakultní nemocnice Motol (ePACS XXXX)' },
+  { value: 'brno', label: 'Brno', fullName: 'Masarykův onkologický ústav (ePACS YYYY)' },
 ];
 
 export interface DoctorContact {
