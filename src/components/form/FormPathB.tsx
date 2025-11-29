@@ -11,7 +11,6 @@ import {
   PatientContactFields,
   DoctorContactFields,
   DestinationSelector,
-  EPacsCheckbox,
 } from "./FormFields";
 import { SuccessDialog } from "./SuccessDialog";
 import { Button } from "@/components/ui/button";
@@ -308,11 +307,11 @@ export const FormPathB = ({ onBack }: FormPathBProps) => {
             error={errors.destination}
           />
           
+          <p className="text-sm text-muted-foreground">
+            Snímky z vyšetření prosím sdílejte přes systém ePACS.
+          </p>
+          
           <FileUpload files={formData.attachments} onChange={(files) => updateField("attachments", files)} />
-          <EPacsCheckbox
-            checked={formData.epacsShared}
-            onChange={(checked) => updateField("epacsShared", checked)}
-          />
         </div>
       )}
 
