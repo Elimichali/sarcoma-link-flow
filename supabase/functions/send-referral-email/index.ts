@@ -2,6 +2,11 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+const kv = await Deno.openKv();
+
+// Rate limiting configuration
+const RATE_LIMIT_WINDOW = 60 * 60 * 1000; // 1 hour in milliseconds
+const MAX_SUBMISSIONS = 5; // Maximum submissions per IP per window
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -90,6 +95,50 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    // Rate limiting: Extract IP address
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || 
+               req.headers.get("x-real-ip") || 
+               "unknown";
+    
+    console.log(`Request from IP: ${ip}`);
+    
+    // Check rate limit
+    const rateLimitKey = ["rate_limit", ip];
+    const rateLimitData = await kv.get(rateLimitKey);
+    
+    const now = Date.now();
+    let submissions: number[] = rateLimitData.value as number[] || [];
+    
+    // Filter out old submissions outside the time window
+    submissions = submissions.filter(timestamp => now - timestamp < RATE_LIMIT_WINDOW);
+    
+    // Check if rate limit exceeded
+    if (submissions.length >= MAX_SUBMISSIONS) {
+      console.warn(`Rate limit exceeded for IP: ${ip}`);
+      return new Response(
+        JSON.stringify({ 
+          error: "Příliš mnoho požadavků. Zkuste to prosím později.",
+          retryAfter: Math.ceil((submissions[0] + RATE_LIMIT_WINDOW - now) / 1000)
+        }),
+        {
+          status: 429,
+          headers: { 
+            "Content-Type": "application/json",
+            "Retry-After": Math.ceil((submissions[0] + RATE_LIMIT_WINDOW - now) / 1000).toString(),
+            ...corsHeaders 
+          },
+        }
+      );
+    }
+    
+    // Add current timestamp
+    submissions.push(now);
+    
+    // Store updated submissions with expiration
+    await kv.set(rateLimitKey, submissions, { 
+      expireIn: RATE_LIMIT_WINDOW 
+    });
+
     const data: ReferralEmailRequest = await req.json();
     
     console.log("Received referral form submission:", {
