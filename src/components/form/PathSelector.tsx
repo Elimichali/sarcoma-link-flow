@@ -12,7 +12,7 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
   return (
     <div className="animate-fade-in flex flex-col min-h-[calc(100vh-180px)]">
       {/* Hero Section - Above the Fold */}
-      <section className="relative py-8 px-4 -mx-4 bg-gradient-to-br from-accent via-background to-accent/50 border-b border-border">
+      <section className="relative py-8 px-4 -mx-4 bg-gradient-to-br from-sarcoma/30 via-sarcoma/10 to-accent border-b border-sarcoma/30">
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
             {/* Left: Title & Description */}
@@ -60,27 +60,27 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
             Kdy formulář použít
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
-              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                <Search className="w-6 h-6 text-primary" />
+            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-sarcoma/10 border border-sarcoma/30 hover:border-sarcoma hover:shadow-md hover:bg-sarcoma/20 transition-all duration-200">
+              <div className="w-12 h-12 rounded-full bg-sarcoma/30 flex items-center justify-center mb-3 group-hover:bg-sarcoma/50 transition-colors">
+                <Search className="w-6 h-6 text-sarcoma-dark" />
               </div>
               <p className="text-sm text-foreground">
                 <strong>Nová bulka nebo léze</strong> vzbuzující podezření
               </p>
             </div>
             
-            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
-              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                <TrendingUp className="w-6 h-6 text-primary" />
+            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-sarcoma/10 border border-sarcoma/30 hover:border-sarcoma hover:shadow-md hover:bg-sarcoma/20 transition-all duration-200">
+              <div className="w-12 h-12 rounded-full bg-sarcoma/30 flex items-center justify-center mb-3 group-hover:bg-sarcoma/50 transition-colors">
+                <TrendingUp className="w-6 h-6 text-sarcoma-dark" />
               </div>
               <p className="text-sm text-foreground">
                 Nález se <strong>zvětšuje nebo mění</strong>
               </p>
             </div>
             
-            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-card border border-border hover:border-primary/50 hover:shadow-md transition-all duration-200">
-              <div className="w-12 h-12 rounded-full bg-accent flex items-center justify-center mb-3 group-hover:bg-primary/20 transition-colors">
-                <Users className="w-6 h-6 text-primary" />
+            <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-sarcoma/10 border border-sarcoma/30 hover:border-sarcoma hover:shadow-md hover:bg-sarcoma/20 transition-all duration-200">
+              <div className="w-12 h-12 rounded-full bg-sarcoma/30 flex items-center justify-center mb-3 group-hover:bg-sarcoma/50 transition-colors">
+                <Users className="w-6 h-6 text-sarcoma-dark" />
               </div>
               <p className="text-sm text-foreground">
                 Potřebujete <strong>konzultaci</strong> nebo <strong>druhý názor</strong>
@@ -91,7 +91,7 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
 
         {/* Requirements Note */}
         <section className="mb-6">
-          <div className="flex items-center gap-3 justify-center p-4 rounded-xl bg-muted/50 border border-border max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 justify-center p-4 rounded-xl bg-sarcoma/5 border border-sarcoma/20 max-w-2xl mx-auto">
             <Stethoscope className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             <p className="text-sm text-muted-foreground">
               <strong className="text-foreground">Minimální potřeba:</strong> základní anamnéza + zobrazovací vyšetření (sono, ideálně MRI/CT)
