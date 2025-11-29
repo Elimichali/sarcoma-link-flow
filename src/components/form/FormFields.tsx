@@ -348,6 +348,10 @@ export const DoctorContactFields = ({ contact, onChange, errors = {} }: DoctorCo
             Jméno<span className="field-required">*</span>
           </Label>
           <Input
+            type="text"
+            name="doctorFirstName"
+            required
+            autoComplete="given-name"
             value={contact.firstName}
             onChange={(e) => updateField('firstName', e.target.value)}
             placeholder="Jan"
@@ -361,6 +365,10 @@ export const DoctorContactFields = ({ contact, onChange, errors = {} }: DoctorCo
             Příjmení<span className="field-required">*</span>
           </Label>
           <Input
+            type="text"
+            name="doctorLastName"
+            required
+            autoComplete="family-name"
             value={contact.lastName}
             onChange={(e) => updateField('lastName', e.target.value)}
             placeholder="Novák"
@@ -377,6 +385,9 @@ export const DoctorContactFields = ({ contact, onChange, errors = {} }: DoctorCo
           </Label>
           <Input
             type="email"
+            name="doctorEmail"
+            required
+            autoComplete="email"
             value={contact.email}
             onChange={(e) => updateField('email', e.target.value)}
             placeholder="jan.novak@nemocnice.cz"
@@ -391,6 +402,12 @@ export const DoctorContactFields = ({ contact, onChange, errors = {} }: DoctorCo
           </Label>
           <Input
             type="tel"
+            name="doctorPhone"
+            required
+            inputMode="tel"
+            autoComplete="tel"
+            pattern="^(\+420 ?)?\d{3} ?\d{3} ?\d{3}$"
+            title="Zadejte telefon ve formátu +420 123 456 789 nebo 123 456 789"
             value={contact.phone}
             onChange={(e) => updateField('phone', e.target.value)}
             placeholder="+420 123 456 789"
@@ -428,6 +445,10 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
             Jméno<span className="field-required">*</span>
           </Label>
           <Input
+            type="text"
+            name="patientFirstName"
+            required
+            autoComplete="given-name"
             value={contact.firstName}
             onChange={(e) => updateField('firstName', e.target.value)}
             placeholder="Jan"
@@ -441,6 +462,10 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
             Příjmení<span className="field-required">*</span>
           </Label>
           <Input
+            type="text"
+            name="patientLastName"
+            required
+            autoComplete="family-name"
             value={contact.lastName}
             onChange={(e) => updateField('lastName', e.target.value)}
             placeholder="Novák"
@@ -455,6 +480,10 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
           Adresa<span className="field-required">*</span>
         </Label>
         <Input
+          type="text"
+          name="patientAddress"
+          required
+          autoComplete="street-address"
           value={contact.address}
           onChange={(e) => updateField('address', e.target.value)}
           placeholder="Ulice 123, 110 00 Praha"
@@ -471,6 +500,7 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
           <Select
             value={contact.insurance}
             onValueChange={(value) => updateField('insurance', value)}
+            required
           >
             <SelectTrigger className={cn(errors.insurance && "border-destructive")}>
               <SelectValue placeholder="Vyberte pojišťovnu" />
@@ -491,6 +521,13 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
             Rodné číslo<span className="field-required">*</span>
           </Label>
           <Input
+            type="text"
+            name="birthNumber"
+            required
+            inputMode="numeric"
+            maxLength={11}
+            pattern="^\d{6}\/?\d{3,4}$"
+            title="Zadejte rodné číslo ve tvaru 123456/7890 nebo 1234567890"
             value={contact.birthNumber}
             onChange={(e) => updateField('birthNumber', e.target.value)}
             placeholder="123456/7890"
@@ -507,6 +544,12 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
           </Label>
           <Input
             type="tel"
+            name="patientPhone"
+            required
+            inputMode="tel"
+            autoComplete="tel"
+            pattern="^(\+420 ?)?\d{3} ?\d{3} ?\d{3}$"
+            title="Zadejte telefon ve formátu +420 123 456 789 nebo 123 456 789"
             value={contact.phone}
             onChange={(e) => updateField('phone', e.target.value)}
             placeholder="+420 123 456 789"
@@ -521,6 +564,9 @@ export const PatientContactFields = ({ contact, onChange, errors = {} }: Patient
           </Label>
           <Input
             type="email"
+            name="patientEmail"
+            required
+            autoComplete="email"
             value={contact.email}
             onChange={(e) => updateField('email', e.target.value)}
             placeholder="jan.novak@email.cz"
