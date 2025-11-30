@@ -18,6 +18,7 @@ import { ArrowLeft, ArrowRight, Send, Calendar, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [gdprConsent, setGdprConsent] = useState(false);
 
   const updateField = <K extends keyof FormDataPathA>(field: K, value: FormDataPathA[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -533,18 +535,26 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
 
           {/* GDPR consent notice */}
           <div className="bg-sarcoma/10 border border-sarcoma/30 rounded-lg p-4">
-            <p className="text-sm text-foreground">
-              Odesíláním formuláře souhlasíte s{" "}
-              <a 
-                href="http://sarkomy.cz/gdpr/" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="text-sarcoma hover:text-sarcoma/80 underline"
-              >
-                podmínkami zpracování osobních údajů
-              </a>
-              {" "}(GDPR).
-            </p>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <Checkbox
+                checked={gdprConsent}
+                onCheckedChange={(checked) => setGdprConsent(checked === true)}
+                className="mt-0.5"
+              />
+              <span className="text-sm text-foreground">
+                Odesíláním formuláře souhlasíte s{" "}
+                <a 
+                  href="http://sarkomy.cz/gdpr/" 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sarcoma hover:text-sarcoma/80 underline"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  podmínkami zpracování osobních údajů (GDPR)
+                </a>
+                .
+              </span>
+            </label>
           </div>
         </div>
       )}
@@ -571,7 +581,7 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
             <ArrowRight className="w-4 h-4" />
           </Button>
         ) : (
-          <Button onClick={handleSubmit} variant="success" className="gap-2" disabled={isSubmitting}>
+          <Button onClick={handleSubmit} variant="success" className="gap-2" disabled={isSubmitting || !gdprConsent}>
             {isSubmitting ? (
               <>
                 <Loader2 className="w-4 h-4 animate-spin" />
