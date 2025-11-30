@@ -72,9 +72,6 @@ export const FormPathA = ({ onBack }: FormPathAProps) => {
       }
       formData.selectedImagingTypes.forEach((type) => {
         const exam = formData.imagingExams.find((e) => e.type === type);
-        if (!exam?.date) {
-          newErrors[`${type}_date`] = "Datum je povinné";
-        }
         if (!exam?.description?.trim()) {
           newErrors[`${type}_description`] = "Popis je povinný";
         }
