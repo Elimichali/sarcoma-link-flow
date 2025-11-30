@@ -14,13 +14,6 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// CSRF protection: Allowed origins
-const ALLOWED_ORIGINS = [
-  "https://rsrirxtmingmfooukhnz.lovableproject.com",
-  "http://localhost:5173",
-  "http://localhost:4173",
-];
-
 // HTML escaping function to prevent XSS attacks
 function escapeHtml(text: string): string {
   const map: Record<string, string> = {
@@ -102,22 +95,6 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    // CSRF protection: Validate Origin header
-    const origin = req.headers.get("origin");
-    if (!origin || !ALLOWED_ORIGINS.includes(origin)) {
-      console.warn(`Blocked request from unauthorized origin: ${origin}`);
-      return new Response(
-        JSON.stringify({ error: "Neautorizovaný požadavek" }),
-        {
-          status: 403,
-          headers: { 
-            "Content-Type": "application/json",
-            ...corsHeaders 
-          },
-        }
-      );
-    }
-    
     // Rate limiting: Extract IP address
     const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || 
                req.headers.get("x-real-ip") || 
