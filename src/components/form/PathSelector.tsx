@@ -36,7 +36,7 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
               <div className="flex items-center gap-3 justify-center md:justify-start mb-3">
                 <SarcomaRibbon size="sm" />
                 <span className="text-xs font-medium text-sarcoma-dark bg-sarcoma/20 px-2.5 py-1 rounded-full">
-                  Sarkom Awareness
+                  Společně proti Sarkomu
                 </span>
               </div>
               <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
