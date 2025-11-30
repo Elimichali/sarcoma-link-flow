@@ -160,7 +160,7 @@ export const ImagingExamFields = ({ exams, selectedTypes, onChange }: ImagingExa
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label className="text-xs text-muted-foreground">
-                Datum vyšetření<span className="field-required">*</span>
+                Datum vyšetření
               </Label>
               <div className="relative">
                 <Input
