@@ -1,5 +1,15 @@
 import { FormPath } from "@/types/form";
-import { Search, TrendingUp, Users, Stethoscope, CheckCircle2, ArrowRight, ChevronDown, Mail, LogIn } from "lucide-react";
+import {
+  Search,
+  TrendingUp,
+  Users,
+  Stethoscope,
+  CheckCircle2,
+  ArrowRight,
+  ChevronDown,
+  Mail,
+  LogIn,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { SarcomaRibbon } from "@/components/SarcomaRibbon";
 
@@ -18,7 +28,7 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
           <LogIn className="w-4 h-4" />
           <span className="hidden sm:inline">Přihlášení</span>
         </button>
-        
+
         <div className="max-w-3xl mx-auto">
           <div className="flex flex-col md:flex-row items-center gap-6 md:gap-10">
             {/* Left: Title & Description */}
@@ -36,11 +46,11 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
                 Předejte případ specializovanému týmu — rychle, bezpečně a jednoduše.
               </p>
             </div>
-            
+
             {/* Right: CTA */}
             <div className="flex flex-col items-center gap-3">
               <Button
-                onClick={() => onSelectPath('A')}
+                onClick={() => onSelectPath("A")}
                 size="lg"
                 className="bg-primary hover:bg-sarcoma-dark text-primary-foreground font-semibold px-8 py-6 text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
               >
@@ -74,7 +84,7 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
                 <strong>Nová bulka nebo léze</strong> vzbuzující podezření
               </p>
             </div>
-            
+
             <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-sarcoma/10 border border-sarcoma/30 hover:border-sarcoma hover:shadow-md hover:bg-sarcoma/20 transition-all duration-200">
               <div className="w-12 h-12 rounded-full bg-sarcoma/30 flex items-center justify-center mb-3 group-hover:bg-sarcoma/50 transition-colors">
                 <TrendingUp className="w-6 h-6 text-sarcoma-dark" />
@@ -83,7 +93,7 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
                 Nález se <strong>zvětšuje nebo mění</strong>
               </p>
             </div>
-            
+
             <div className="group flex flex-col items-center text-center p-5 rounded-xl bg-sarcoma/10 border border-sarcoma/30 hover:border-sarcoma hover:shadow-md hover:bg-sarcoma/20 transition-all duration-200">
               <div className="w-12 h-12 rounded-full bg-sarcoma/30 flex items-center justify-center mb-3 group-hover:bg-sarcoma/50 transition-colors">
                 <Users className="w-6 h-6 text-sarcoma-dark" />
@@ -100,7 +110,8 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
           <div className="flex items-center gap-3 justify-center p-4 rounded-xl bg-sarcoma/5 border border-sarcoma/20 max-w-2xl mx-auto">
             <Stethoscope className="w-5 h-5 text-muted-foreground flex-shrink-0" />
             <p className="text-sm text-muted-foreground">
-              <strong className="text-foreground">Minimální potřeba:</strong> základní anamnéza + zobrazovací vyšetření (sono, ideálně MRI/CT)
+              <strong className="text-foreground">Minimální potřeba:</strong> základní anamnéza + zobrazovací vyšetření
+              (sono, ideálně MRI/CT)
             </p>
           </div>
         </section>
@@ -117,14 +128,14 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
               </div>
               <p className="text-sm text-foreground">Formulář vás provede všemi kroky</p>
             </div>
-            
+
             <div className="flex flex-col items-center text-center p-4 rounded-xl border border-success/30 bg-success/5">
               <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center mb-2">
                 <CheckCircle2 className="w-5 h-5 text-success" />
               </div>
               <p className="text-sm text-foreground">Doporučujeme odeslat co nejdříve</p>
             </div>
-            
+
             <div className="flex flex-col items-center text-center p-4 rounded-xl border border-success/30 bg-success/5">
               <div className="w-10 h-10 rounded-full bg-success/20 flex items-center justify-center mb-2">
                 <CheckCircle2 className="w-5 h-5 text-success" />
@@ -133,17 +144,6 @@ export const PathSelector = ({ onSelectPath }: PathSelectorProps) => {
             </div>
           </div>
         </section>
-
-        {/* Secondary CTA */}
-        <div className="flex justify-center">
-          <a 
-            href="mailto:koordinator@sarkom.cz" 
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <Mail className="w-4 h-4" />
-            Kontaktovat koordinátora
-          </a>
-        </div>
       </div>
     </div>
   );
