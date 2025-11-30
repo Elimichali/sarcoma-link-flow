@@ -42,6 +42,187 @@ interface ReferralEmailRequest {
   attachments?: AttachmentData[];
 }
 
+// Helper function to generate unique IDs for FHIR resources
+const generateId = (prefix: string): string => {
+  return `${prefix}-${crypto.randomUUID()}`;
+};
+
+// Build FHIR Bundle from form data
+const buildFhirBundle = (data: ReferralEmailRequest): object => {
+  const patientId = generateId('pat');
+  const observationId = generateId('obs');
+  const conditionId = generateId('cond');
+  const serviceRequestId = generateId('req');
+  
+  const formData = data.formData;
+  
+  // Build clinical findings summary for Observation
+  const clinicalFindings: string[] = [];
+  if (formData.suspicionReason) {
+    clinicalFindings.push(`Důvod podezření: ${formData.suspicionReason}`);
+  }
+  if (formData.anamnesis) {
+    clinicalFindings.push(`Anamnéza: ${formData.anamnesis}`);
+  }
+  if (formData.hasBloodThinners && formData.bloodThinnersDetails) {
+    clinicalFindings.push(`Antikoagulancia: ${formData.bloodThinnersDetails}`);
+  }
+  
+  const bundle = {
+    resourceType: 'Bundle',
+    type: 'collection',
+    timestamp: new Date().toISOString(),
+    entry: [
+      {
+        fullUrl: `urn:uuid:${patientId}`,
+        resource: {
+          resourceType: 'Patient',
+          id: patientId,
+          identifier: [
+            {
+              system: 'urn:oid:2.16.840.1.113883.2.4.6.3',
+              value: data.patientContact.birthNumber,
+            }
+          ],
+          name: [
+            {
+              text: `${data.patientContact.firstName} ${data.patientContact.lastName}`,
+              family: data.patientContact.lastName,
+              given: [data.patientContact.firstName],
+            }
+          ],
+          telecom: [
+            {
+              system: 'phone',
+              value: data.patientContact.phone,
+            },
+            ...(data.patientContact.email ? [{
+              system: 'email',
+              value: data.patientContact.email,
+            }] : []),
+          ],
+          address: [
+            {
+              text: data.patientContact.address,
+            }
+          ],
+        }
+      },
+      {
+        fullUrl: `urn:uuid:${observationId}`,
+        resource: {
+          resourceType: 'Observation',
+          id: observationId,
+          status: 'final',
+          code: {
+            coding: [
+              {
+                system: 'http://loinc.org',
+                code: '11506-3',
+                display: 'Progress note',
+              }
+            ],
+            text: 'Klinický nález',
+          },
+          subject: {
+            reference: `urn:uuid:${patientId}`,
+          },
+          effectiveDateTime: new Date().toISOString(),
+          valueString: clinicalFindings.join('\n'),
+        }
+      },
+      {
+        fullUrl: `urn:uuid:${conditionId}`,
+        resource: {
+          resourceType: 'Condition',
+          id: conditionId,
+          clinicalStatus: {
+            coding: [
+              {
+                system: 'http://terminology.hl7.org/CodeSystem/condition-clinical',
+                code: 'active',
+              }
+            ],
+          },
+          verificationStatus: {
+            coding: [
+              {
+                system: 'http://terminology.hl7.org/CodeSystem/condition-ver-status',
+                code: 'provisional',
+              }
+            ],
+          },
+          category: [
+            {
+              coding: [
+                {
+                  system: 'http://terminology.hl7.org/CodeSystem/condition-category',
+                  code: 'encounter-diagnosis',
+                }
+              ],
+            }
+          ],
+          code: {
+            coding: [
+              {
+                system: 'http://snomed.info/sct',
+                code: '424413001',
+                display: 'Soft tissue sarcoma',
+              }
+            ],
+            text: 'Podezření na sarkom',
+          },
+          subject: {
+            reference: `urn:uuid:${patientId}`,
+          },
+          onsetDateTime: new Date().toISOString(),
+        }
+      },
+      {
+        fullUrl: `urn:uuid:${serviceRequestId}`,
+        resource: {
+          resourceType: 'ServiceRequest',
+          id: serviceRequestId,
+          status: 'active',
+          intent: 'order',
+          category: [
+            {
+              coding: [
+                {
+                  system: 'http://snomed.info/sct',
+                  code: '3457005',
+                  display: 'Referral',
+                }
+              ],
+            }
+          ],
+          code: {
+            text: 'Referral for sarcoma evaluation',
+          },
+          subject: {
+            reference: `urn:uuid:${patientId}`,
+          },
+          reasonReference: [
+            {
+              reference: `urn:uuid:${conditionId}`,
+            }
+          ],
+          requester: {
+            display: `${data.doctorContact.firstName} ${data.doctorContact.lastName}`,
+          },
+          performer: [
+            {
+              display: DESTINATION_NAMES[data.destination] || data.destination,
+            }
+          ],
+        }
+      },
+    ],
+  };
+  
+  return bundle;
+};
+
 const DESTINATION_NAMES: Record<string, string> = {
   praha: 'Fakultní nemocnice Motol',
   brno: 'Masarykův onkologický ústav',
@@ -252,6 +433,24 @@ const handler = async (req: Request): Promise<Response> => {
       filename: attachment.filename,
       content: attachment.content, // base64 string
     })) || [];
+
+    // Generate FHIR Bundle and add as attachment (with error handling)
+    try {
+      const fhirBundle = buildFhirBundle(data);
+      const fhirJson = JSON.stringify(fhirBundle, null, 2);
+      const fhirBase64 = btoa(fhirJson);
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+      
+      emailAttachments.push({
+        filename: `sarkom-fasttrack-referral-fhir-${timestamp}.json`,
+        content: fhirBase64,
+      });
+      
+      console.log('FHIR Bundle generated and added as attachment');
+    } catch (error) {
+      console.error('Error generating FHIR Bundle (email will still be sent):', error);
+      // Continue with email sending even if FHIR generation fails
+    }
 
     console.log(`Sending email with ${emailAttachments.length} attachment(s)`);
 
