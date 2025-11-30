@@ -438,7 +438,10 @@ const handler = async (req: Request): Promise<Response> => {
     try {
       const fhirBundle = buildFhirBundle(data);
       const fhirJson = JSON.stringify(fhirBundle, null, 2);
-      const fhirBase64 = btoa(fhirJson);
+      // Use TextEncoder to properly handle UTF-8 characters (Czech text)
+      const encoder = new TextEncoder();
+      const fhirBytes = encoder.encode(fhirJson);
+      const fhirBase64 = btoa(String.fromCharCode(...fhirBytes));
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       
       emailAttachments.push({
